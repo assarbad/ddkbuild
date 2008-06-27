@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA4a
-@set REVDATE=2006-12-13
+@set REVISION=V7.0 BETA5
+@set REVDATE=2007-01-03
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -63,7 +63,7 @@ goto :EOF
 ::    COMMAND FORMAT (taken from the script's output):
 ::
 ::      ddkbuild <platform> <build type> <directory> [flags] [-WDF] [-PREFAST]
-::      
+::
 ::      Platform values:
 ::            -W2K       to indicate W2K        build using %W2KBASE%
 ::            -W2K64     to indicate W2K  IA64  build using %W2KBASE%
@@ -85,13 +85,13 @@ goto :EOF
 ::            -WLHI64    to indicate WLH IA64   build using %WLHBASE%
 ::            -WLHX64    to indicate WLH AMD64  build using %WLHBASE%
 ::            -NT4       to indicate NT4        build using %NT4BASE%
-::      
+::
 ::      Build types:
 ::             checked
 ::             chk       indicates a checked build
 ::             free
 ::             fre       indicates a free build
-::      
+::
 ::      Remaining parameters:
 ::             directory path to build directory, try . (cwd)
 ::             flags     any random flags you think should be passed to build (try /a
@@ -245,11 +245,28 @@ goto :CommonBuild
 :WLHXPCheck
 :WLH2KCheck
 :WLHNETCheck
-set BASEDIROS=Windows Codename Longhorn
+set BASEDIROS=Windows Vista/Longhorn Server
 set BASEDIRVAR=WLHBASE
+:: Compatibility between BUILD and VS ... prevent pipes from being used
+echo Clearing %%VS_UNICODE_OUTPUT%% ...
+set VS_UNICODE_OUTPUT=
 :: Return to caller
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
-call :CommonCheckMsg2
+call :CommonCheckMsg1
+:: Try all the possible "default" locations
+set BASEDIRTEMP=%SystemDrive%\WINDDK\6000
+echo Trying %BASEDIRTEMP% ...
+if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+set BASEDIRTEMP=%ProgramFiles%\WINDDK\6000
+echo Trying %BASEDIRTEMP% ...
+if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+:: Try some "odd" locations
+set BASEDIRTEMP=%SystemDrive%\DDK\6000
+echo Trying %BASEDIRTEMP% ...
+if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+set BASEDIRTEMP=%ProgramFiles%\DDK\6000
+echo Trying %BASEDIRTEMP% ...
+if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotSupportedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -262,7 +279,7 @@ goto :CommonCheckErrorNotSupportedWithReturn
 :WNETX64Check
 :WNETCheck
 
-set BASEDIROS=Windows 2003
+set BASEDIROS=Windows 2003 Server
 set BASEDIRVAR=WNETBASE
 :: Return to caller
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
@@ -628,11 +645,15 @@ build  %bflags% %mpFlag%
 goto :BuildComplete
 
 :RunPrefastBuild
-@echo run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory%
+@echo Run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory%
 pushd .
-prefast build  %bflags% %mpFlag%
+setlocal
+set PREFASTLOG=PREfast_defects_%W2kEXT%.xml
+prefast /log=%PREFASTLOG% /reset build  %bflags% %mpFlag% > NUL
 if "%errorlevel%" GTR "0" set OSR_ERRCODE=%errorlevel%
-prefast list > prefast%W2kEXT%.log
+prefast /log=%PREFASTLOG% list > prefast%W2kEXT%.log
+echo The PREfast logfile is ^"%prefastlog%^"!
+endlocal
 
 :BuildComplete
 if not {%errorlevel%} == {0} set OSR_ERRCODE=%errorlevel%
@@ -641,15 +662,30 @@ popd
 @echo %OSR_DEBUG%
 
 :: Assume that the onscreen errors are complete!
-
-@echo =============== build warnings ======================
-if exist "build%W2kEXT%.wrn" findstr "warning[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
-if exist "build%W2kEXT%.log" findstr "error[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
-
-if {%prefast_build%} == {0} goto :SkipPrefastWarnings
-@echo =============== prefast warnings ======================
-if exist "prefast%W2kEXT%.log" findstr "warning[^.][CLU]*" "prefast%W2kEXT%.log"
-:SkipPrefastWarnings
+setlocal
+set WARNING_FILE_COUNT=0
+set WARNING_OUTPUT=0
+if exist "build%W2kEXT%.wrn" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
+if exist "build%W2kEXT%.log" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
+if not {%WARNING_FILE_COUNT%} == {0} (
+  @echo ================ Build warnings =======================
+  if exist "build%W2kEXT%.wrn" findstr "warning[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
+  if exist "build%W2kEXT%.log" findstr "error[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
+  set /a WARNING_OUTPUT=%WARNING_OUTPUT%+1
+)
+set WARNING_FILE_COUNT=0
+if exist "prefast%W2kEXT%.log" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
+:: Reset if this is no PREfast build
+if {%prefast_build%} == {0} set WARNING_FILE_COUNT=0
+if not {%WARNING_FILE_COUNT%} == {0} (
+  @echo =============== PREfast warnings ======================
+  if exist "prefast%W2kEXT%.log" findstr "warning[^.][CLU]*" "prefast%W2kEXT%.log"
+  set /a WARNING_OUTPUT=%WARNING_OUTPUT%+1
+)
+if not {%WARNING_OUTPUT%} == {0} (
+  @echo =======================================================
+)
+endlocal
 @echo.
 @echo.
 @echo Build complete

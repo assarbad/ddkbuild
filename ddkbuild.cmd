@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA6
-@set REVDATE=2007-02-22
+@set REVISION=V7.0 BETA6a
+@set REVDATE=2007-02-26
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -559,9 +559,11 @@ if {%NUMBER_OF_PROCESSORS%}=={1} set mpFlag=
 @if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
   %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
-  for /f "tokens=*" %%x in ('call "%OSR_PREBUILD_SCRIPT%"') do @(
+  call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
+  if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"
   popd
   %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
@@ -705,11 +707,13 @@ bscmake%bscFlags% @%sbrlist%
 popd
 @if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
   %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
-  setlocal ENABLEEXTENSIONS & pushd "%buildDirectory%"
-  for /f "tokens=*" %%x in ('call "%OSR_POSTBUILD_SCRIPT%"') do @(
+  pushd "%buildDirectory%"
+  call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
-  popd & endlocal
+  if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"
+  popd
   %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
 goto :END

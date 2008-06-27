@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA7
-@set REVDATE=2007-03-18
+@set REVISION=V7.0 RC1
+@set REVDATE=2007-05-30
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -602,10 +602,12 @@ goto :ContinueParsing
 
 :WDFFound
 shift
+:: Note, that the setwdf.bat is called from setenv.bat in the WDK,
+:: therefore we skip it.
 if /i "%BASEDIRVAR%" == "WLHBASE" goto :WDFOkay
 if "%WDF_ROOT%" == "" call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
 pushd .
-call %WDF_ROOT%\set_wdf_env.cmd
+if exist "%WDF_ROOT%\set_wdf_env.cmd" call %WDF_ROOT%\set_wdf_env.cmd
 popd
 :WDFOkay
 goto :ContinueParsing
@@ -942,7 +944,8 @@ goto :EOF
 @echo       %%WNETBASE%% - Set this up for ^"-WNET*^" builds
 @echo       %%WLHBASE%%  - Set this up for ^"-WLH*^" builds
 @echo.
-@echo       %%WDF_ROOT%% must be set if attempting to do a WDF Build.
+@echo       %%WDF_ROOT%% must be set if attempting to do a WDF Build previous to the
+@echo       Vista WDK (in later DDKs there is no need to set WDF_ROOT).
 @echo.
 @echo.
 @echo   %OSR_VERSTR%

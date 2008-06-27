@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA3a
-@set REVDATE=2006-10-02
+@set REVISION=V7.0 BETA4
+@set REVDATE=2006-11-07
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -71,9 +71,9 @@ goto :EOF
 ::            -WXP64     to indicate WXP  IA64  build using %WXPBASE%
 ::            -WXP2K     to indicate W2K        build using %WXPBASE%
 ::            -WNET      to indicate WNET       build using %WNETBASE%
-::            -WNET64    to indicate WNET IA64  build using %WNETBASE%
+::            -WNET64    to indicate WNET IA64  build using %WNETBASE% (= -WNETI64)
 ::            -WNETXP    to indicate WXP        build using %WNETBASE%
-::            -WNETXP64  to indicate WXP  IA64  build using %WNETBASE% (= -WNETI64)
+::            -WNETXP64  to indicate WXP  IA64  build using %WNETBASE%
 ::            -WNETAMD64 to indicate WNET AMD64 build using %WNETBASE% (= -WNETX64)
 ::            -WNET2K    to indicate W2K        build using %WNETBASE%
 ::            -WLH       to indicate WLH        build using %WLHBASE%
@@ -257,9 +257,9 @@ goto :CommonCheckErrorNotSupportedWithReturn
 :WNETXPCheck
 :WNETXP64Check
 :WNET64Check
-:WNETI64Build
+:WNETI64Check
 :WNETAMD64Check
-:WNETX64Build
+:WNETX64Check
 :WNETCheck
 
 set BASEDIROS=Windows 2003
@@ -792,9 +792,9 @@ goto :EOF
 @echo       -WXP64     to indicate WXP  IA64  build using %%WXPBASE%%
 @echo       -WXP2K     to indicate W2K        build using %%WXPBASE%%
 @echo       -WNET      to indicate WNET       build using %%WNETBASE%%
-@echo       -WNET64    to indicate WNET IA64  build using %%WNETBASE%%
+@echo       -WNET64    to indicate WNET IA64  build using %%WNETBASE%% (= -WNETI64)
 @echo       -WNETXP    to indicate WXP        build using %%WNETBASE%%
-@echo       -WNETXP64  to indicate WXP  IA64  build using %%WNETBASE%% (= -WNETI64)
+@echo       -WNETXP64  to indicate WXP  IA64  build using %%WNETBASE%%
 @echo       -WNETAMD64 to indicate WNET AMD64 build using %%WNETBASE%% (= -WNETX64)
 @echo       -WNET2K    to indicate W2K        build using %%WNETBASE%%
 @echo       -WLH       to indicate WLH        build using %%WLHBASE%%

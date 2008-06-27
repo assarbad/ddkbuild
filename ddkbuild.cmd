@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA4
-@set REVDATE=2006-11-07
+@set REVISION=V7.0 BETA4a
+@set REVDATE=2006-12-13
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -42,7 +42,7 @@ goto :EOF
 ::    AUTHOR(S):
 ::
 ::      - OSR Open Systems Resources, Inc.
-::      - Oliver Schneider (assarbad.net)
+::      - Oliver Schneider (ddkwizard.assarbad.net)
 ::
 ::    REQUIREMENTS:  Environment variables that must be set.
 ::
@@ -599,8 +599,8 @@ if {%WDF_ROOT%} == {} call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
 pushd .
 call %WDF_ROOT%\set_wdf_env.cmd
 popd
-:WFDOkay
-set OSR_DEBUG=on
+:WDFOkay
+:: set OSR_DEBUG=on We don't need that here
 goto :ContinueParsing
 
 :PrefastFound
@@ -843,7 +843,7 @@ goto :EOF
 @echo.
 @echo.
 @echo   %OSR_VERSTR%
-@echo   -^> report any problems found to info@osr.com
+@echo   -^> report any problems found to info@osr.com or assarbad.net/contact
 @echo.
 
 :END

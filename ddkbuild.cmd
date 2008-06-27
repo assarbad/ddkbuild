@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 RC1
-@set REVDATE=2007-05-30
+@set REVISION=V7.0 RC2
+@set REVDATE=2007-09-06
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -187,6 +187,7 @@ if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotS
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set BASEDIR=%%%BASEDIRVAR%%%
 call :ResolveVar BASEDIR
+call :MakeShort BASEDIR "%BASEDIR%"
 :: Check for existing %BASEDIR%
 if "%BASEDIR%" == "" call :ShowErrorMsg 4 "%ERR_NoBASEDIR%" & goto :USAGE
 set PATH=%BASEDIR%\bin;%PATH%
@@ -385,125 +386,125 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: NT 4.0 build using NT4 DDK
 :NT4Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% "%%MSDEVDIR%%"
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% "%%MSDEVDIR%%"
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using WXP DDK
 :WXP2KBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\w2k\set2k.bat %%BASEDIR%% %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\w2k\set2k.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 64bit (Intel) using W2K DDK
 :W2K64Build
 :W2KI64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv64.bat %%BASEDIR%% %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv64.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using W2K DDK
 :W2KBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 64bit (Intel) using WXP DDK
 :WXP64Build
 :WXPI64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 32bit using WXP DDK
 :WXPBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using WNET DDK
 :WNET2KBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% W2K %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% W2K %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 32bit using WNET DDK
 :WNETXPBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% WXP
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 64bit using WNET DDK
 :WNETXP64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64 WXP
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (Intel) using WNET DDK
 :WNET64Build
 :WNETI64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (AMD) using WNET DDK
 :WNETAMD64Build
 :WNETX64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% AMD64 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 32bit using WNET DDK
 :WNETBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 32bit using WLH DDK
 :WLHBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% WLH
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (AMD) using WLH DDK
 :WLHX64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% AMD64 WLH
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (Intel) using WLH DDK
 :WLHI64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64 WLH
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (AMD) using WLH DDK
 :WLHNETX64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% AMD64 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (Intel) using WLH DDK
 :WLHNETI64Build
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 32bit using WLH DDK
 :WLHXPBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% WXP
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using WLH DDK
 :WLH2KBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% W2K
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% W2K
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 32bit using WLH DDK
 :WLHNETBuild
-set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -537,7 +538,8 @@ popd
 :: Setting global variables for the scope of this CMD session
 set NO_BROWSER_FILE=
 set NO_BINPLACE=
-set buildDirectory=%~f2
+set buildDirectory=%~fs2
+call :MakeShort buildDirectory "%buildDirectory%"
 set buildDirectory_raw=%2
 set buildDirectory_fname=%~n2
 %OSR_TRACE% buildDirectory       == %buildDirectory%
@@ -607,7 +609,7 @@ shift
 if /i "%BASEDIRVAR%" == "WLHBASE" goto :WDFOkay
 if "%WDF_ROOT%" == "" call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
 pushd .
-if exist "%WDF_ROOT%\set_wdf_env.cmd" call %WDF_ROOT%\set_wdf_env.cmd
+if exist "%WDF_ROOT%\set_wdf_env.cmd" call "%WDF_ROOT%\set_wdf_env.cmd"
 popd
 :WDFOkay
 goto :ContinueParsing
@@ -837,7 +839,26 @@ if not "%VAR_TEMPRET1%" == "%VAR_TEMPRET2%" goto :ResolveVarLoop
 endlocal & set %VAR_NAME%=%VAR_TEMPRET1%
 goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: / ResolveVar subroutine
+:: \ ResolveVar subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / MakeShort subroutine
+::   Two parameters. First parameter is the variable name, second is the path
+::   to convert into a short filename.
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:MakeShort
+setlocal ENABLEEXTENSIONS
+:: Get the name of the variable we are working with and the path to convert
+set VAR_NAME=%~1
+set PATH_SHORT=%~dpns2
+set PATH_EXTSHORT=%~xs2
+set PATH_EXTSHORT=%PATH_EXTSHORT:~0,4%
+set PATH_SHORT=%PATH_SHORT%%PATH_EXTSHORT%
+endlocal & set %VAR_NAME%=%PATH_SHORT%
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ MakeShort subroutine
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

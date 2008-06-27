@@ -1,10 +1,13 @@
 @echo off
-@set REVISION=V7.0 (final)
-@set REVDATE=2008-01-20
+@set REVISION=V7.1
+@set REVDATE=2008-03-21
 @set OSR_DEBUG=off
-@if "%OS%"=="Windows_NT" goto :MAIN
+@if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
 goto :EOF
+:Prerequisites
+:: Check whether FINDSTR is available. It's used to show warnings etc.
+findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
 ::    This software is supplied for instructional purposes only.
@@ -37,7 +40,11 @@ goto :EOF
 ::
 ::    ABSTRACT:
 ::
-::      This file allows drivers to be build with visual studio and visual studio.net
+::      This script allows drivers to be build with Visual Studio 2002 through
+::      (.NET) Visual Studio 2008 and possibly future versions. It will also
+::      work fine from the command line.
+::      If you are interested in a project wizard that makes use of this script,
+::      try DDKWizard from <http://ddkwizard.assarbad.net>.
 ::
 ::    AUTHOR(S):
 ::
@@ -47,8 +54,8 @@ goto :EOF
 ::    REQUIREMENTS:
 ::
 ::      Environment variables that must be set.
-::        %NT4BASE%  - Set this up for "-NT4" builds
-::        %W2KBASE%  - Set this up for "-W2K*" builds
+::        %NT4BASE%  - Set this up for "-NT4" builds (legacy, support not tested)
+::        %W2KBASE%  - Set this up for "-W2K*" builds (legacy, support not tested)
 ::        %WXPBASE%  - Set this up for "-WXP*" builds
 ::        %WNETBASE% - Set this up for "-WNET*" builds
 ::        %WLHBASE%  - Set this up for "-WLH*" builds
@@ -67,47 +74,50 @@ goto :EOF
 ::
 ::    RETURN CODES AND THEIR MEANING:
 ::
-::       001 == Unknown build type. Check the <platform> parameter
-::       002 == No WDF_ROOT given using WDF build type.
-::       003 == The DDK-specific base directory variable (NT4BASE, W2KBASE, WXPBASE,
-::              WNETBASE) is not set at all and could not be auto-detected!
-::       004 == BASEDIR variable is empty. Check to see that the DDK-specific
-::              variable is set correctly (i.e. NT4BASE, W2KBASE, WXPBASE, WNETBASE)
-::       005 == No mode (checked/free) was given. Check the respective parameter!
-::       006 == No DIR or SOURCES file found in the given target directory.
-::       007 == No target directory given.
-::       008 == Given target directory does not exist.
+::      001 == Unknown build type. Check the <platform> parameter
+::      002 == No WDF_ROOT given using WDF build type.
+::      003 == The DDK-specific base directory variable (NT4BASE, W2KBASE, WXPBASE,
+::             WNETBASE) is not set at all and could not be auto-detected!
+::      004 == BASEDIR variable is empty. Check to see that the DDK-specific
+::             variable is set correctly (i.e. NT4BASE, W2KBASE, WXPBASE, WNETBASE)
+::      005 == No mode (checked/free) was given. Check the respective parameter!
+::      006 == No DIR or SOURCES file found in the given target directory.
+::      007 == No target directory given.
+::      008 == Given target directory does not exist.
+::      009 == The SETENV script failed.
 ::
-::       Note: If %OSR_ERRCODE% and %ERRORLEVEL% are equal, the return code stems
-::             from one of the tools being called during the build process.
+::      Note: If %OSR_ERRCODE% and %ERRORLEVEL% are equal, the return code stems
+::            from one of the tools being called during the build process.
 ::
 ::    BROWSE FILES:
 ::
-::       This procedure supports the building of BROWSE files to be used by
-::       Visual Studio 6 and by Visual Studio.Net  However, the BSCfiles created
-::       by bscmake for the 2 studios are not compatible. When this command procedure
-::       runs, it selects the first bscmake.exe found in the path.   So, make
-::       sure that the correct bscmake.exe is in the path....
+::      This procedure supports the building of BROWSE files to be used by
+::      Visual Studio 6 and by Visual Studio.Net  However, the BSCfiles created
+::      by bscmake for the 2 studios are not compatible. When this command procedure
+::      runs, it selects the first bscmake.exe found in the path.   So, make
+::      sure that the correct bscmake.exe is in the path....
 ::
-::       Note that if using Visual Studio.NET the .BSC must be added to the project
-::       in order for the project to be browsed.
-::       Another alternative is the VS addon named "Visual Assist X" which will
-::       parse the header files - no more need for browse files.
+::      Note that if using Visual Studio.NET the .BSC must be added to the project
+::      in order for the project to be browsed.
+::      Another alternative is the VS addon named "Visual Assist X" which will
+::      parse the header files - no more need for browse files.
 ::
 ::    COMPILERS:
 ::
-::        If you are building NT4 you should really
-::        be using the VC 6 compiler.   Later versions of the DDK now contain the
-::        compiler and the linker.  This procedure should use the correct compiler.
+::      If you are building NT4 you should really be using the VC 6 compiler.
+::      Later versions of the DDK now contain the compiler and the linker. This
+::      procedure should use the correct compiler.
 ::
 ::    GENERAL COMMENTS:
 ::
-::        This procedure has been cleaned up to be modular and easy to
-::        understand.
+::      This procedure has been cleaned up to be modular and easy to understand.
 ::
-::        As of the Server 2003 SP1 DDK ddkbuild now clears the
-::        NO_BROWSE_FILE and NO_BINPLACE environment variables so that users
-::        can use these features.
+::      As of the Server 2003 SP1 DDK ddkbuild now clears the NO_BROWSE_FILE and
+::      NO_BINPLACE environment variables so that users can use these features.
+::
+::      Starting with the Vista WDK, the output in the respective tool window
+::      in VS is in Unicode by default. This garbles the output from DDKBUILD
+::      and we therefore clear the environment variable VS_UNICODE_OUTPUT.
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -117,6 +127,8 @@ goto :EOF
 :MAIN
 :: Building "stack frame"
 setlocal ENABLEEXTENSIONS & pushd .
+:: Check whether the REG utility is available
+reg /? > NUL 2>&1 && set OSR_REGAVAILABLE=1
 
 :: Init some special variables
 set OSR_VERSTR=OSR DDKBUILD.CMD %REVISION% (%REVDATE%) - OSR, Open Systems Resources, Inc.
@@ -141,6 +153,8 @@ set ERR_BadMode=^<build type^> must be 'checked', 'free', 'chk' or 'fre' (case-i
 set ERR_NoTarget=Target directory must contain a SOURCES or DIRS file.
 :: Possible codes: 7, 8
 set ERR_NoDir=The ^<directory^> parameter must be a valid directory.
+:: Possible codes: 9
+set ERR_SetEnvFailed=The SETENV script failed.
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Clear the error code variable
@@ -149,7 +163,6 @@ set prefast_build=0
 
 :: Turn on tracing, use %OSR_TRACE% instead of ECHO
 if /i "%OSR_DEBUG%" == "on" (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRACE=rem)
-
 :: Turn on echoing of current line if %OSR_DEBUG% is set to "on"
 @echo %OSR_DEBUG%
 
@@ -219,28 +232,15 @@ goto :CommonBuild
 :WLHXPCheck
 :WLH2KCheck
 :WLHNETCheck
-set BASEDIROS=Windows Vista/Longhorn Server
+set BASEDIROS=Windows Vista/Windows 2008 Server
 set BASEDIRVAR=WLHBASE
 :: Compatibility between BUILD and VS ... prevent pipes from being used
 %OSR_ECHO% Clearing %%VS_UNICODE_OUTPUT%% ...
 set VS_UNICODE_OUTPUT=
-:: Return to caller
+:: Return to caller if the BASEDIR is already defined (either customized or global)
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
-call :CommonCheckMsg1
-:: Try all the possible "default" locations
-set BASEDIRTEMP=%SystemDrive%\WINDDK\6000
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\WINDDK\6000
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-:: Try some "odd" locations
-set BASEDIRTEMP=%SystemDrive%\DDK\6000
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\DDK\6000
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+call :DetectBaseDirTemp "6001.18000 6000"
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotSupportedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -252,50 +252,12 @@ goto :CommonCheckErrorNotSupportedWithReturn
 :WNETAMD64Check
 :WNETX64Check
 :WNETCheck
-
 set BASEDIROS=Windows 2003 Server
 set BASEDIRVAR=WNETBASE
-:: Return to caller
+:: Return to caller if the BASEDIR is already defined (either customized or global)
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
-call :CommonCheckMsg1
-:: Try all the possible "default" locations
-set BASEDIRTEMP=%SystemDrive%\WINDDK\3790.1830
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%SystemDrive%\WINDDK\3790.1218
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%SystemDrive%\WINDDK\3790
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\WINDDK\3790.1830
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\WINDDK\3790.1218
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%%ProgramFiles%\WINDDK\3790
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-:: Try some "odd" locations
-set BASEDIRTEMP=%SystemDrive%\DDK\3790.1830
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%SystemDrive%\DDK\3790.1218
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%SystemDrive%\DDK\3790
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\DDK\3790.1830
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\DDK\3790.1218
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\DDK\3790
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+call :DetectBaseDirTemp "3790.1830 3790.1218 3790"
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotDetectedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -305,23 +267,10 @@ goto :CommonCheckErrorNotDetectedWithReturn
 :WXP2KCheck
 set BASEDIROS=Windows XP
 set BASEDIRVAR=WXPBASE
-:: Return to caller
+:: Return to caller if the BASEDIR is already defined (either customized or global)
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
-call :CommonCheckMsg1
-:: Try all the possible "default" locations
-set BASEDIRTEMP=%SystemDrive%\WINDDK\2600
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\WINDDK\2600
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-:: Try some "odd" locations
-set BASEDIRTEMP=%SystemDrive%\DDK\2600
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
-set BASEDIRTEMP=%ProgramFiles%\DDK\2600
-%OSR_ECHO% Trying %BASEDIRTEMP% ...
-if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+call :DetectBaseDirTemp "2600.1106 2600"
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotDetectedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -350,7 +299,6 @@ echo.
 %OSR_ECHO% WARNING: %%%BASEDIRVAR%%% NOT SET!
 %OSR_ECHO%   Attempting to auto-detect the installation folder and set %%%BASEDIRVAR%%%.
 %OSR_ECHO%   (If this fails *you* will have to set it!)
-echo.
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -382,6 +330,15 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Initialize variables specific to the respective platform
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: 
+:: Valid parameters for setenv in different DDKs/WDKs:
+::
+:: 2600       - "setenv <directory> [fre|chk] [64] [hal]"
+:: 2600.1106  - "setenv <directory> [fre|chk] [64] [hal] [WXP|W2K]"
+:: 3790       - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K]"
+:: 3790.1830  - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K] [no_prefast] [bscmake]"
+:: 6000       - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 6001.18000 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: NT 4.0 build using NT4 DDK
@@ -468,7 +425,8 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (AMD) using WLH DDK
 :WLHX64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WLH
+call :DetectVistaWDK
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD64FLAG% WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -480,7 +438,8 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (AMD) using WLH DDK
 :WLHNETX64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WNET
+call :DetectVistaWDK
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD64FLAG% WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -519,7 +478,6 @@ goto :EOF
 shift
 call :SetMode %1
 if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
-:: Resolve unresolved variable
 set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
 
 call :CheckTargets %2
@@ -527,11 +485,14 @@ if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & go
 if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
 
 :: Resolve any variables in the command line string
-set OSR_CMDLINE=%OSR_CMDLINE%
+call :ResolveVar OSR_CMDLINE
 
 pushd .
+set ERRORLEVEL=0
 :: This external script prepares the build environment (e.g. setenv.bat)
 call %OSR_CMDLINE%
+:: Will only work with newer SETENV.BAT versions, but will be helpful in this case.
+if not "%ERRORLEVEL%" == "0" call :ShowErrorMsg 9 "%ERR_SetEnvFailed%" & goto :USAGE
 popd
 
 :: ----------------------------------------------------------------------------
@@ -628,10 +589,10 @@ goto :ContinueParsing
 
 :DONE
 
-if exist "build%OSR_EXT%.err"   erase /f /q "build%OSR_EXT%.err"
-if exist "build%OSR_EXT%.wrn2"   erase /f /q "build%OSR_EXT%.wrn"
-if exist "build%OSR_EXT%.log"   erase /f /q "build%OSR_EXT%.log"
-if exist "prefast%OSR_EXT%.log" erase /f /q "prefast%OSR_EXT%.log"
+if exist "build%OSR_EXT%.err"   del /f /q "build%OSR_EXT%.err"
+if exist "build%OSR_EXT%.wrn2"  del /f /q "build%OSR_EXT%.wrn"
+if exist "build%OSR_EXT%.log"   del /f /q "build%OSR_EXT%.log"
+if exist "prefast%OSR_EXT%.log" del /f /q "prefast%OSR_EXT%.log"
 
 if not "%prefast_build%" == "0" goto :RunPrefastBuild
 %OSR_ECHO% Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
@@ -644,7 +605,7 @@ goto :BuildComplete
 %OSR_ECHO% Run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
 setlocal ENABLEEXTENSIONS & pushd .
 set PREFASTLOG=PREfast_defects_%OSR_EXT%.xml
-prefast /log=%PREFASTLOG% /reset build  %bflags% %mpFlag% > NUL
+prefast /log=%PREFASTLOG% /reset build  %bflags% %mpFlag% > NUL 2>&1
 if "%errorlevel%" GTR "0" set OSR_ERRCODE=%errorlevel%
 prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
 %OSR_ECHO% The PREfast logfile is ^"%prefastlog%^"!
@@ -742,6 +703,7 @@ call :CheckTargets "%~f1"
   call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret
   goto :GetCustomEnvironment_ret
 )
+:: If the user provided a script to customize the environment, execute it.
 @if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
   %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
   pushd "%~f1"
@@ -880,16 +842,144 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / SetVar subroutine
+::   Param1 == name of the variable, Param2 == value to be set for the variable
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:SetVar
+:: Get the name of the variable we are working with
+setlocal ENABLEEXTENSIONS & set VAR_NAME=%1
+endlocal & set %VAR_NAME%=%~2
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ SetVar subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / DetectVistaWDK subroutine
+::   No parameters expected
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:DetectVistaWDK
+setlocal ENABLEEXTENSIONS
+:: Newer flag (starting with W2K8) is default
+set OSR_AMD64FLAG=x64
+:: The Vista WDK accepted *only* "AMD64", the newer W2K8 WDK accepts only "x64"
+:: We detect the older one by checking the setenv.bat for a certain string
+findstr /C:"Windows Server Longhorn" "%BASEDIR%\bin\setenv.bat" > NUL 2>&1 && set OSR_AMD64FLAG=AMD64
+endlocal & set OSR_AMD64FLAG=%OSR_AMD64FLAG%
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ DetectVistaWDK subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / DetectBaseDirTemp subroutine
+::   The first parameter is the list of directory names to check, separated by
+::   blank spaces.
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:DetectBaseDirTemp
+:: Get the name of the variable we are working with
+if "%~1" == "" goto :EOF
+setlocal ENABLEEXTENSIONS
+call :CommonCheckMsg1
+:: Try to find an installed DDK/WDK from the registry keys
+if DEFINED OSR_REGAVAILABLE if not "%OSR_REGAVAILABLE%" == "0" (
+  for %%i in (%~1) do @(
+    call :RegTryBaseDirTemp "%%i"
+  )
+)
+:: Try all the "default" locations
+if not DEFINED BASEDIRTEMP (
+  for %%i in (%~1) do @(
+    for %%a in (WINDDK DDK) do @(
+      call :BruteTryBaseDirTemp "%SystemDrive%\%%a\%%i"
+      call :BruteTryBaseDirTemp "%ProgramFiles%\%%a\%%i"
+    )
+  )
+)
+endlocal & set BASEDIRTEMP=%BASEDIRTEMP%
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ DetectBaseDirTemp subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / RegTryBaseDirTemp subroutine
+::   Attempt to find the install key in the registry.
+::   This functions tests old-style DDKs and new-style WDKs.
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:RegTryBaseDirTemp
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :EOF
+setlocal ENABLEEXTENSIONS
+call :RegTryBaseDirTempSingle "%~1" "LFNDirectory" BASEDIRTEMP
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :RegTryBaseDirTemp_EOF
+call :RegTryBaseDirTempSingle "%~1\Setup" "BUILD" BASEDIRTEMP
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :RegTryBaseDirTemp_EOF
+if not DEFINED BASEDIRTEMP (endlocal & goto :EOF)
+:RegTryBaseDirTemp_EOF
+%OSR_ECHO% Found directory (%BASEDIRTEMP%) from install key
+endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ RegTryBaseDirTemp subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / RegTryBaseDirTempSingle subroutine
+::   Attempt to find the install key in the registry.
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:RegTryBaseDirTempSingle
+setlocal ENABLEEXTENSIONS
+set REGSUBKEY=%~1
+set REGVALUE=%~2
+set VARIABLETOSET=%~3
+set REGMAINKEY=HKLM\SOFTWARE\Microsoft\WINDDK
+:: Test whether we can read the value below this key
+reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%" > NUL 2>&1 || goto :RegTryBaseDirTempSingle_WOW64
+for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do @(
+  call :SetVar _SETVARIABLE "%%j"
+)
+endlocal & set %VARIABLETOSET%=%_SETVARIABLE%
+:RegTryBaseDirTempSingle_WOW64
+set REGMAINKEY=HKLM\SOFTWARE\Wow6432Node\Microsoft\WINDDK
+:: Test whether we can read the value below this key
+reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%" > NUL 2>&1 || goto :RegTryBaseDirTempSingle_EOF
+for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do @(
+  call :SetVar _SETVARIABLE "%%j"
+)
+endlocal & set %VARIABLETOSET%=%_SETVARIABLE%
+:RegTryBaseDirTempSingle_EOF
+endlocal
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ RegTryBaseDirTempSingle subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: / BruteTryBaseDirTemp subroutine
+::   Brute-force test the given directory.
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:BruteTryBaseDirTemp
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :EOF
+setlocal ENABLEEXTENSIONS
+:: We will not overwrite BASETEMPDIR if it has been set and is valid
+:: Just try
+set BASEDIRTEMP=%~1
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
+if not exist "%BASEDIRTEMP%" (endlocal & goto :EOF)
+endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: \ BruteTryBaseDirTemp subroutine
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Usage output
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :USAGE
 @echo.
-@echo Syntax:
-@echo -------
-@echo ddkbuild ^<platform^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
+@echo USAGE:
+@echo ======
+@echo %~n0 ^<platform^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
 @echo Values for ^<platform^>:
-@echo.
 @echo      -------------------------------------------------------------
 @echo       Target platform and DDK   ^| Miscellaneous
 @echo      ---------------------------^|---------------------------------
@@ -916,47 +1006,55 @@ goto :EOF
 @echo       -WLHX64    ^| WLH   ^| x64  ^| %%WLHBASE%%      ^|
 @echo       -NT4       ^| NT4   ^| x86  ^| %%NT4BASE%%      ^|
 @echo      -------------------------------------------------------------
+@echo       Support for NT4 and W2K DDKs is deprecated and not checked
+@echo       anymore in new versions. It may or may not work.
+@echo      -------------------------------------------------------------
 @echo.
 @echo Values for ^<build type^>:
-@echo        checked, chk    indicates a checked build
-@echo        free, fre       indicates a free build
+@echo       checked, chk     indicates a checked build
+@echo       free, fre        indicates a free build
 @echo.
 @echo Remaining parameters ("opt!" = optional parameter):
-@echo        ^<directory^>     path to build directory, try . (cwd)
-@echo        [flags]   opt!  any flags you think should be passed to build (try /a
+@echo       ^<directory^>      path to build directory, try . (current directory)
+@echo       [flags]    opt!  any flags you think should be passed to build (try /a
 @echo                        for clean)
 @echo       -WDF       opt!  performs a WDF build
 @echo       -PREFAST   opt!  performs a PREFAST build
 @echo.
 @echo Special files:
-@echo        The build target directory (where the DIRS or SOURCES file resides) can
-@echo        contain the following files:
-@echo        - %OSR_PREBUILD_SCRIPT%
-@echo          Allows to include a step before the BUILD tool from the DDK is called
-@echo          but after the environment for the respective DDK has been set!
-@echo        - %OSR_POSTBUILD_SCRIPT%
-@echo          Allows to include a step after the BUILD tool from the DDK is called,
-@echo          so the environment is still available to the script.
-@echo        - %OSR_SETENV_SCRIPT%
-@echo          Allows to set (or override) _any_ environment variables that may exist
-@echo          in the global environment. Thus you can set the base directory for the
-@echo          DDK from inside this script, making your project more self-contained.
+@echo       The build target directory (where the DIRS or SOURCES file resides) can
+@echo       contain the following files:
+@echo       - %OSR_PREBUILD_SCRIPT%
+@echo         Allows to include a step before the BUILD tool from the DDK is called
+@echo         but after the environment for the respective DDK has been set!
+@echo       - %OSR_POSTBUILD_SCRIPT%
+@echo         Allows to include a step after the BUILD tool from the DDK is called,
+@echo         so the environment is still available to the script.
+@echo       - %OSR_SETENV_SCRIPT%
+@echo         Allows to set (or override) _any_ environment variables that may exist
+@echo         in the global environment. Thus you can set the base directory for the
+@echo         DDK from inside this script, making your project more self-contained.
 @echo.
-@echo        DDKBUILD will only handle those files which exist, so you may choose to
-@echo        use none, one or multiple of these script files.
-@echo        (All scripts execute inside there current directory. Consider this!)
+@echo       DDKBUILD will only handle those files which exist, so you may choose to
+@echo       use none, one or multiple of these script files.
+@echo       (All scripts execute inside there current directory. Consider this!)
 @echo.
 @echo Examples:
-@echo       ^"ddkbuild -NT4 checked .^" (for NT4 BUILD)
-@echo       ^"ddkbuild -WXP64 chk .^"
-@echo       ^"ddkbuild -WXP chk c:\projects\myproject^"
-@echo       ^"ddkbuild -WNET64 chk .^"      (IA64 build)
-@echo       ^"ddkbuild -WNETAMD64 chk .^"   (AMD64/EM64T build)
-@echo       ^"ddkbuild -WNETXP chk . -cZ -WDF^"
-@echo       ^"ddkbuild -WNETXP chk . -cZ -PREFAST^"
+@echo       ^"%~n0 -NT4 checked .^" (for NT4 BUILD)
+@echo       ^"%~n0 -WXP64 chk .^"
+@echo       ^"%~n0 -WXP chk c:\projects\myproject^"
+@echo       ^"%~n0 -WNET64 chk .^"      (IA64 build)
+@echo       ^"%~n0 -WNETAMD64 chk .^"   (AMD64/EM64T build)
+@echo       ^"%~n0 -WNETXP chk . -cZ -WDF^"
+@echo       ^"%~n0 -WNETXP chk . -cZ -PREFAST^"
 @echo.
 @echo       In order for this procedure to work correctly for each platform, it
 @echo       requires an environment variable to be set up for certain platforms.
+@echo       There is an auto-detection mechanism in this script, which will work best
+@echo       if the DDK/WDK was installed using the normal installer (i.e. not just
+@echo       copied). The auto-detection is based on the DDK/WDK for which you request
+@echo       a build. Whenever you set the variable explicitly, this will take
+@echo       precedence over the auto-detected path!
 @echo       The environment variables are as follows:
 @echo.
 @echo       %%NT4BASE%%  - Set this up for ^"-NT4^" builds
@@ -970,7 +1068,7 @@ goto :EOF
 @echo.
 @echo.
 @echo   %OSR_VERSTR%
-@echo   -^> report any problems found to info@osr.com or assarbad.net/contact
+@echo   -^> report any problems found to info@osr.com or http://assarbad.net/contact
 @echo.
 
 :END

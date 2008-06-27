@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 RC2
-@set REVDATE=2007-09-06
+@set REVISION=V7.0 RC3
+@set REVDATE=2007-09-12
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -853,7 +853,7 @@ setlocal ENABLEEXTENSIONS
 set VAR_NAME=%~1
 set PATH_SHORT=%~dpns2
 set PATH_EXTSHORT=%~xs2
-set PATH_EXTSHORT=%PATH_EXTSHORT:~0,4%
+if not "" == "%PATH_EXTSHORT%" set PATH_EXTSHORT=%PATH_EXTSHORT:~0,4%
 set PATH_SHORT=%PATH_SHORT%%PATH_EXTSHORT%
 endlocal & set %VAR_NAME%=%PATH_SHORT%
 goto :EOF

@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA6a
-@set REVDATE=2007-02-26
+@set REVISION=V7.0 BETA7
+@set REVDATE=2007-03-18
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -148,7 +148,7 @@ set OSR_ERRCODE=0
 set prefast_build=0
 
 :: Turn on tracing, use %OSR_TRACE% instead of ECHO
-if /i {%OSR_DEBUG%} == {on} (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRACE=rem)
+if /i "%OSR_DEBUG%" == "on" (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRACE=rem)
 
 :: Turn on echoing of current line if %OSR_DEBUG% is set to "on"
 @echo %OSR_DEBUG%
@@ -162,15 +162,15 @@ if /i {%OSR_DEBUG%} == {on} (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRA
 :: Set the target platform variable
 set OSR_TARGET=%~1
 :: Remove any dashes in the variable
-if not {%OSR_TARGET%} == {} set OSR_TARGET=%OSR_TARGET:-=%
+if not "%OSR_TARGET%" == "" set OSR_TARGET=%OSR_TARGET:-=%
 :: Show help if the target parameter is empty after removal of the dashes
-if {%OSR_TARGET%} == {} goto :USAGE
+if "%OSR_TARGET%" == "" goto :USAGE
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: In the build directory check for this script and call it if it exists.
 :: This allows to override any global system variable setting, if desired.
-if not "%3" == "" call :GetCustomEnvironment %~f3
-if not {%OSR_ERRCODE%} == {0} goto :USAGE
+if not "%3" == "" call :GetCustomEnvironment "%~f3"
+if not "%OSR_ERRCODE%" == "0" goto :USAGE
 :: Additional error handling for better usability
 :: These subroutines will also attempt to locate the requested DDK!!!
 set OSR_ERRCODE=3
@@ -182,13 +182,13 @@ call :%OSR_TARGET%Check
 :: If the BASEDIROS/BASEDIRVAR variable is not defined, it means the subroutine did not exist!
 if not DEFINED BASEDIROS call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIROS)" & goto :USAGE
 if not DEFINED BASEDIRVAR call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIRVAR)" & goto :USAGE
-if not {%OSR_ERRCODE%} == {0} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set BASEDIR=%%%BASEDIRVAR%%%
 call :ResolveVar BASEDIR
 :: Check for existing %BASEDIR%
-if {%BASEDIR%}=={} call :ShowErrorMsg 4 "%ERR_NoBASEDIR%" & goto :USAGE
+if "%BASEDIR%" == "" call :ShowErrorMsg 4 "%ERR_NoBASEDIR%" & goto :USAGE
 set PATH=%BASEDIR%\bin;%PATH%
 %OSR_TRACE% Now jump to the initialization of the commandline
 :: Calling as a subroutine has 2 advantages:
@@ -517,13 +517,13 @@ goto :EOF
 :: Remove first command line arg
 shift
 call :SetMode %1
-if not {%OSR_ERRCODE%} == {0} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
 :: Resolve unresolved variable
 set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
 
 call :CheckTargets %2
-if {%OSR_ERRCODE%} == {6} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
-if not {%OSR_ERRCODE%} == {0} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
+if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
 
 :: Resolve any variables in the command line string
 set OSR_CMDLINE=%OSR_CMDLINE%
@@ -545,15 +545,15 @@ set buildDirectory_fname=%~n2
 %OSR_TRACE% buildDirectory_fname == %buildDirectory_fname%
 
 set mpFlag=-M
-if {%BUILD_ALT_DIR%}=={} goto :NT4
+if "%BUILD_ALT_DIR%" == "" goto :NT4
 
 :: W2K sets this!
 set OSR_EXT=%BUILD_ALT_DIR%
 set mpFlag=-MI
 
 :NT4
-if {%NUMBER_OF_PROCESSORS%}=={} set mpFlag=
-if {%NUMBER_OF_PROCESSORS%}=={1} set mpFlag=
+if "%NUMBER_OF_PROCESSORS%" == "" set mpFlag=
+if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
 
 :: Set additional variables at this point or do whatever you please
 @if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
@@ -577,9 +577,9 @@ pushd .
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 %OSR_ECHO% %OSR_BUILDNAME%
 set OSR_ARGS= + argument(s):
-if not {%3} == {} set OSR_ARGS=%OSR_ARGS% %3
-if not {%4} == {} set OSR_ARGS=%OSR_ARGS% %4
-if not {%5} == {} set OSR_ARGS=%OSR_ARGS% %5
+if not "%3" == "" set OSR_ARGS=%OSR_ARGS% %3
+if not "%4" == "" set OSR_ARGS=%OSR_ARGS% %4
+if not "%5" == "" set OSR_ARGS=%OSR_ARGS% %5
 if /i "%OSR_ARGS%" == " + argument(s):" set OSR_ARGS=
 %OSR_ECHO% Directory: %buildDirectory%%OSR_ARGS%
 %OSR_ECHO% %BASEDIRVAR%: %BASEDIR%
@@ -590,10 +590,10 @@ set bscFlags=
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ContinueParsing
-if {%3} == {} goto :DONE
-if {%3} == {/a} goto :RebuildallFound
-if /i {%3} == {-WDF} goto :WDFFound
-if /i {%3} == {-PREFAST} goto :PrefastFound
+if "%3" == "" goto :DONE
+if "%3" == "/a" goto :RebuildallFound
+if /i "%3" == "-WDF" goto :WDFFound
+if /i "%3" == "-PREFAST" goto :PrefastFound
 set bscFlags=/n
 set bflags=%bflags% %3 -e
 :: Remove first arg
@@ -602,8 +602,8 @@ goto :ContinueParsing
 
 :WDFFound
 shift
-if /i {%BASEDIRVAR%} == {WLHBASE} goto :WDFOkay
-if {%WDF_ROOT%} == {} call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
+if /i "%BASEDIRVAR%" == "WLHBASE" goto :WDFOkay
+if "%WDF_ROOT%" == "" call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
 pushd .
 call %WDF_ROOT%\set_wdf_env.cmd
 popd
@@ -629,7 +629,7 @@ if exist "build%OSR_EXT%.wrn2"   erase /f /q "build%OSR_EXT%.wrn"
 if exist "build%OSR_EXT%.log"   erase /f /q "build%OSR_EXT%.log"
 if exist "prefast%OSR_EXT%.log" erase /f /q "prefast%OSR_EXT%.log"
 
-if not {%prefast_build%} == {0} goto :RunPrefastBuild
+if not "%prefast_build%" == "0" goto :RunPrefastBuild
 %OSR_ECHO% Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
 pushd .
 build  %bflags% %mpFlag%
@@ -647,7 +647,7 @@ prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
 popd & endlocal
 
 :BuildComplete
-if not {%errorlevel%} == {0} set OSR_ERRCODE=%errorlevel%
+if not "%errorlevel%" == "0" set OSR_ERRCODE=%errorlevel%
 
 @echo %OSR_DEBUG%
 :: Assume that the onscreen errors are complete!
@@ -659,7 +659,7 @@ if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DR
 if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
   set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
-if not {%WARNING_FILE_COUNT%} == {0} (
+if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
   if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
     %OSR_ECHO% %%x
@@ -673,15 +673,15 @@ if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][
   set /a WARNING_FILE_COUNT_PRE=%WARNING_FILE_COUNT_PRE%+1
 )
 :: Reset if this is no PREfast build
-if {%prefast_build%} == {0} set WARNING_FILE_COUNT_PRE=0
-if not {%WARNING_FILE_COUNT_PRE%} == {0} (
+if "%prefast_build%" == "0" set WARNING_FILE_COUNT_PRE=0
+if not "%WARNING_FILE_COUNT_PRE%" == "0" (
   %OSR_ECHO% =============== PREfast warnings ======================
   if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
     %OSR_ECHO% %%x
   )
 )
 set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+%WARNING_FILE_COUNT_PRE%
-if not {%WARNING_FILE_COUNT%} == {0} (
+if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% =======================================================
 )
 endlocal
@@ -696,7 +696,7 @@ set sbrlist=sbrList%CPU%.txt
 :sbrDefault
 if not exist %sbrlist% goto :postBuildSteps
 :: Prepend blank space
-if not {%bscFlags%} == {} set bscFlags= %bscFlags%
+if not "%bscFlags%" == "" set bscFlags= %bscFlags%
 :: bscmake%bscFlags% prevents a double blank space ...
 bscmake%bscFlags% @%sbrlist%
 
@@ -728,22 +728,24 @@ goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :GetCustomEnvironment
 pushd .
-call :CheckTargets %1
-@if not {%OSR_ERRCODE%} == {0} @(
+call :CheckTargets "%~f1"
+@if not "%OSR_ERRCODE%" == "0" @(
   echo.
   %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
   %OSR_ECHO% when trying to set a custom environment! Quitting.
   set buildDirectory=%~f1
-  if {%OSR_ERRCODE%} == {6} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
+  if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
   call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret
   goto :GetCustomEnvironment_ret
 )
-@if exist "%1\%OSR_SETENV_SCRIPT%" @(
+@if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
   %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
-  pushd "%1"
-  for /f "tokens=*" %%x in ('call "%OSR_SETENV_SCRIPT%"') do @(
+  pushd "%~f1"
+  call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
+  if exist "%TEMP%\%OSR_SETENV_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"
   popd
   %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )
@@ -761,16 +763,16 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :SetMode
 set BuildMode=
-if /i {%OSR_TARGET%} == {WLH2K} goto :SetModeWLH2K
-for %%f in (free fre) do if /i {%%f} == {%1} set BuildMode=free
-for %%f in (checked chk) do if /i {%%f} == {%1} set BuildMode=checked
+if /i "%OSR_TARGET%" == "WLH2K" goto :SetModeWLH2K
+for %%f in (free fre) do if /i "%%f" == "%1" set BuildMode=free
+for %%f in (checked chk) do if /i "%%f" == "%1" set BuildMode=checked
 goto :SetModeCommonEnd
 :SetModeWLH2K
-for %%f in (free fre) do if /i {%%f} == {%1} set BuildMode=f
-for %%f in (checked chk) do if /i {%%f} == {%1} set BuildMode=c
+for %%f in (free fre) do if /i "%%f" == "%1" set BuildMode=f
+for %%f in (checked chk) do if /i "%%f" == "%1" set BuildMode=c
 :SetModeCommonEnd
 %OSR_TRACE% Mode set to ^"%BuildMode%^"
-if {%BuildMode%} == {} set OSR_ERRCODE=5
+if "%BuildMode%" == "" set OSR_ERRCODE=5
 goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::  \ SetMode
@@ -784,23 +786,24 @@ goto :EOF
 :CheckTargets
 :: Building "stack frame"
 setlocal & pushd . & set OSR_ERRCODE=0
-if not {%1} == {} goto :CheckTargets1
+set lTarget=%~1
+if not "%lTarget%" == "" goto :CheckTargets1
 set OSR_ERRCODE=7
 goto :CheckTargets_ret
 :CheckTargets1
-if exist "%1" goto :CheckTargets2
+if exist "%lTarget%" goto :CheckTargets2
 set OSR_ERRCODE=8
 goto :CheckTargets_ret
 :CheckTargets2
-if not exist "%1\DIRS" goto :CheckTargets3
+if not exist "%lTarget%\DIRS" goto :CheckTargets3
 set OSR_ERRCODE=0
 goto :CheckTargets_ret
 :CheckTargets3
-if exist "%1\SOURCES" goto :CheckTargets4
+if exist "%lTarget%\SOURCES" goto :CheckTargets4
 set OSR_ERRCODE=6
 goto :CheckTargets_ret
 :CheckTargets4
-if exist "%1\MAKEFILE" goto :CheckTargets5
+if exist "%lTarget%\MAKEFILE" goto :CheckTargets5
 set OSR_ERRCODE=6
 goto :CheckTargets_ret
 :CheckTargets5

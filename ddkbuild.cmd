@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 BETA5
-@set REVDATE=2007-01-03
+@set REVISION=V7.0 BETA6
+@set REVDATE=2007-02-22
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -44,15 +44,15 @@ goto :EOF
 ::      - OSR Open Systems Resources, Inc.
 ::      - Oliver Schneider (ddkwizard.assarbad.net)
 ::
-::    REQUIREMENTS:  Environment variables that must be set.
+::    REQUIREMENTS:
 ::
-::      %NT4BASE%  - Set this up for "-NT4" builds
-::      %W2KBASE%  - Set this up for "-W2K*" builds
-::      %WXPBASE%  - Set this up for "-WXP*" builds
-::      %WNETBASE% - Set this up for "-WNET*" builds
-::      %WLHBASE% - Set this up for "-WLH*" builds
-::
-::      %WDF_ROOT% must be set if attempting to do a WDF Build.
+::      Environment variables that must be set.
+::        %NT4BASE%  - Set this up for "-NT4" builds
+::        %W2KBASE%  - Set this up for "-W2K*" builds
+::        %WXPBASE%  - Set this up for "-WXP*" builds
+::        %WNETBASE% - Set this up for "-WNET*" builds
+::        %WLHBASE%  - Set this up for "-WLH*" builds
+::        %WDF_ROOT% - Must be set if attempting to do a WDF Build.
 ::
 ::      Examples:
 ::        NT4BASE : could be "D:\NT4DDK"
@@ -60,45 +60,9 @@ goto :EOF
 ::        WXPBASE : could be "D:\WINDDK\2600"
 ::        WNETBASE: could be "D:\WINDDK\3790.1830" or "C:\WINDDK\3790"
 ::
-::    COMMAND FORMAT (taken from the script's output):
+::    COMMAND FORMAT:
 ::
-::      ddkbuild <platform> <build type> <directory> [flags] [-WDF] [-PREFAST]
-::
-::      Platform values:
-::            -W2K       to indicate W2K        build using %W2KBASE%
-::            -W2K64     to indicate W2K  IA64  build using %W2KBASE%
-::            -WXP       to indicate WXP        build using %WXPBASE%
-::            -WXP64     to indicate WXP  IA64  build using %WXPBASE%
-::            -WXP2K     to indicate W2K        build using %WXPBASE%
-::            -WNET      to indicate WNET       build using %WNETBASE%
-::            -WNET64    to indicate WNET IA64  build using %WNETBASE% (= -WNETI64)
-::            -WNETXP    to indicate WXP        build using %WNETBASE%
-::            -WNETXP64  to indicate WXP  IA64  build using %WNETBASE%
-::            -WNETAMD64 to indicate WNET AMD64 build using %WNETBASE% (= -WNETX64)
-::            -WNET2K    to indicate W2K        build using %WNETBASE%
-::            -WLH       to indicate WLH        build using %WLHBASE%
-::            -WLH2K     to indicate W2K        build using %WLHBASE%
-::            -WLHXP     to indicate WXP        build using %WLHBASE%
-::            -WLHNET    to indicate WNET       build using %WLHBASE%
-::            -WLHNETI64 to indicate WNET IA64  build using %WLHBASE%
-::            -WLHNETX64 to indicate WNET AMD64 build using %WLHBASE%
-::            -WLHI64    to indicate WLH IA64   build using %WLHBASE%
-::            -WLHX64    to indicate WLH AMD64  build using %WLHBASE%
-::            -NT4       to indicate NT4        build using %NT4BASE%
-::
-::      Build types:
-::             checked
-::             chk       indicates a checked build
-::             free
-::             fre       indicates a free build
-::
-::      Remaining parameters:
-::             directory path to build directory, try . (cwd)
-::             flags     any random flags you think should be passed to build (try /a
-::                       for clean)
-::            -WDF       performs a WDF build
-::            -PREFAST   performs a PREFAST build
-::
+::      Run the script without any parameters to get the whole help content!
 ::      Note: "-WDF" has been tested with the 01.00.5054 version of the framework
 ::
 ::    RETURN CODES AND THEIR MEANING:
@@ -152,10 +116,14 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :MAIN
 :: Building "stack frame"
-setlocal ENABLEEXTENSIONS & pushd
+setlocal ENABLEEXTENSIONS & pushd .
 
 :: Init some special variables
 set OSR_VERSTR=OSR DDKBUILD.CMD %REVISION% (%REVDATE%) - OSR, Open Systems Resources, Inc.
+set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
+set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
+set OSR_SETENV_SCRIPT=ddkbldenv.cmd
+set OSR_ECHO=@echo DDKBLD:
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set error messages
@@ -180,7 +148,7 @@ set OSR_ERRCODE=0
 set prefast_build=0
 
 :: Turn on tracing, use %OSR_TRACE% instead of ECHO
-if /i {%OSR_DEBUG%} == {on} (set OSR_TRACE=@echo) else (set OSR_TRACE=rem)
+if /i {%OSR_DEBUG%} == {on} (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRACE=rem)
 
 :: Turn on echoing of current line if %OSR_DEBUG% is set to "on"
 @echo %OSR_DEBUG%
@@ -188,16 +156,21 @@ if /i {%OSR_DEBUG%} == {on} (set OSR_TRACE=@echo) else (set OSR_TRACE=rem)
 :: Output version string
 @echo %OSR_VERSTR%
 %OSR_TRACE% ^(Current module: ^"%~f0^"^)
+@echo.
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set the target platform variable
-set OSR_TARGET=%1
+set OSR_TARGET=%~1
 :: Remove any dashes in the variable
 if not {%OSR_TARGET%} == {} set OSR_TARGET=%OSR_TARGET:-=%
 :: Show help if the target parameter is empty after removal of the dashes
 if {%OSR_TARGET%} == {} goto :USAGE
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: In the build directory check for this script and call it if it exists.
+:: This allows to override any global system variable setting, if desired.
+if not "%3" == "" call :GetCustomEnvironment %~f3
+if not {%OSR_ERRCODE%} == {0} goto :USAGE
 :: Additional error handling for better usability
 :: These subroutines will also attempt to locate the requested DDK!!!
 set OSR_ERRCODE=3
@@ -248,24 +221,24 @@ goto :CommonBuild
 set BASEDIROS=Windows Vista/Longhorn Server
 set BASEDIRVAR=WLHBASE
 :: Compatibility between BUILD and VS ... prevent pipes from being used
-echo Clearing %%VS_UNICODE_OUTPUT%% ...
+%OSR_ECHO% Clearing %%VS_UNICODE_OUTPUT%% ...
 set VS_UNICODE_OUTPUT=
 :: Return to caller
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
 call :CommonCheckMsg1
 :: Try all the possible "default" locations
 set BASEDIRTEMP=%SystemDrive%\WINDDK\6000
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\WINDDK\6000
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 :: Try some "odd" locations
 set BASEDIRTEMP=%SystemDrive%\DDK\6000
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\DDK\6000
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotSupportedWithReturn
 
@@ -286,46 +259,47 @@ if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
 call :CommonCheckMsg1
 :: Try all the possible "default" locations
 set BASEDIRTEMP=%SystemDrive%\WINDDK\3790.1830
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%SystemDrive%\WINDDK\3790.1218
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%SystemDrive%\WINDDK\3790
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\WINDDK\3790.1830
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\WINDDK\3790.1218
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%%ProgramFiles%\WINDDK\3790
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 :: Try some "odd" locations
 set BASEDIRTEMP=%SystemDrive%\DDK\3790.1830
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%SystemDrive%\DDK\3790.1218
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%SystemDrive%\DDK\3790
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\DDK\3790.1830
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\DDK\3790.1218
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\DDK\3790
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotDetectedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :WXP64Check
+:WXPI64Check
 :WXPCheck
 :WXP2KCheck
 set BASEDIROS=Windows XP
@@ -335,22 +309,23 @@ if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
 call :CommonCheckMsg1
 :: Try all the possible "default" locations
 set BASEDIRTEMP=%SystemDrive%\WINDDK\2600
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\WINDDK\2600
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 :: Try some "odd" locations
 set BASEDIRTEMP=%SystemDrive%\DDK\2600
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 set BASEDIRTEMP=%ProgramFiles%\DDK\2600
-echo Trying %BASEDIRTEMP% ...
+%OSR_ECHO% Trying %BASEDIRTEMP% ...
 if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotDetectedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :W2K64Check
+:W2KI64Check
 :W2KCheck
 set BASEDIROS=Windows 2000
 set BASEDIRVAR=W2KBASE
@@ -371,23 +346,23 @@ goto :CommonCheckErrorNotSupportedWithReturn
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :CommonCheckMsg1
 echo.
-echo WARNING: %%%BASEDIRVAR%%% NOT SET!
-echo   Attempting to auto-detect the installation folder and set %%%BASEDIRVAR%%%.
-echo   (If this fails *you* will have to set it!)
+%OSR_ECHO% WARNING: %%%BASEDIRVAR%%% NOT SET!
+%OSR_ECHO%   Attempting to auto-detect the installation folder and set %%%BASEDIRVAR%%%.
+%OSR_ECHO%   (If this fails *you* will have to set it!)
 echo.
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :CommonCheckMsg2
 echo.
-echo WARNING:
-echo   Auto-detection of the folder settings is not supported for the requested DDK.
-echo   Please set %%%BASEDIRVAR%%% yourself!
+%OSR_ECHO% WARNING:
+%OSR_ECHO%   Auto-detection of the folder settings is not supported for the requested DDK.
+%OSR_ECHO%   Please set %%%BASEDIRVAR%%% yourself!
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :CommonCheckSetVarWithReturn
-echo Found!
+%OSR_ECHO% Found!
 echo.
 set %BASEDIRVAR%=%BASEDIRTEMP%
 set BASEDIRTEMP=
@@ -399,7 +374,7 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :CommonCheckErrorNotDetectedWithReturn
 echo.
-echo None of the usual default paths works. Set %%%BASEDIRVAR%%% manually!
+%OSR_ECHO% None of the usual default paths works. Set %%%BASEDIRVAR%%% manually!
 :CommonCheckErrorNotSupportedWithReturn
 goto :EOF
 
@@ -422,6 +397,7 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 64bit (Intel) using W2K DDK
 :W2K64Build
+:W2KI64Build
 set OSR_CMDLINE=%%BASEDIR%%\bin\setenv64.bat %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
@@ -434,6 +410,7 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 64bit (Intel) using WXP DDK
 :WXP64Build
+:WXPI64Build
 set OSR_CMDLINE=%%BASEDIR%%\bin\setenv.bat %%BASEDIR%% %%BuildMode%% 64
 goto :EOF
 
@@ -542,9 +519,7 @@ shift
 call :SetMode %1
 if not {%OSR_ERRCODE%} == {0} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
 :: Resolve unresolved variable
-set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) build using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
-::call :ResolveVar OSR_BUILDNAME
-::set OSR_BUILDNAME=%OSR_BUILDNAME%
+set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
 
 call :CheckTargets %2
 if {%OSR_ERRCODE%} == {6} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
@@ -562,13 +537,18 @@ popd
 :: Setting global variables for the scope of this CMD session
 set NO_BROWSER_FILE=
 set NO_BINPLACE=
-set buildDirectory=%2
+set buildDirectory=%~f2
+set buildDirectory_raw=%2
+set buildDirectory_fname=%~n2
+%OSR_TRACE% buildDirectory       == %buildDirectory%
+%OSR_TRACE% buildDirectory_raw   == %buildDirectory_raw%
+%OSR_TRACE% buildDirectory_fname == %buildDirectory_fname%
 
 set mpFlag=-M
 if {%BUILD_ALT_DIR%}=={} goto :NT4
 
 :: W2K sets this!
-set W2kEXT=%BUILD_ALT_DIR%
+set OSR_EXT=%BUILD_ALT_DIR%
 set mpFlag=-MI
 
 :NT4
@@ -576,34 +556,43 @@ if {%NUMBER_OF_PROCESSORS%}=={} set mpFlag=
 if {%NUMBER_OF_PROCESSORS%}=={1} set mpFlag=
 
 :: Set additional variables at this point or do whatever you please
-@if exist "%buildDirectory%\ddkprebld.cmd" @(
-  echo Performing pre-build steps ...
-  call %buildDirectory%\ddkprebld.cmd
+@if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
+  %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
+  pushd "%buildDirectory%"
+  for /f "tokens=*" %%x in ('call "%OSR_PREBUILD_SCRIPT%"') do @(
+    %OSR_ECHO% %%x
+  )
+  popd
+  %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
+:: Save the current directory (before changing into the build directory!)
+:: AFTERPREBUILD
+pushd .
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Determine the settings of flags, WDF and PREFAST in
 :: other words what was set for %3 and beyond....
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-@echo Doing a %OSR_BUILDNAME%
+%OSR_ECHO% %OSR_BUILDNAME%
 set OSR_ARGS= + argument(s):
 if not {%3} == {} set OSR_ARGS=%OSR_ARGS% %3
 if not {%4} == {} set OSR_ARGS=%OSR_ARGS% %4
 if not {%5} == {} set OSR_ARGS=%OSR_ARGS% %5
 if /i "%OSR_ARGS%" == " + argument(s):" set OSR_ARGS=
-@echo Directory: %buildDirectory%%OSR_ARGS% (%BASEDIRVAR% == %BASEDIR%)
+%OSR_ECHO% Directory: %buildDirectory%%OSR_ARGS%
+%OSR_ECHO% %BASEDIRVAR%: %BASEDIR%
 
 cd /D %~s2
 set bflags=-Ze
 set bscFlags=
 
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ContinueParsing
 if {%3} == {} goto :DONE
 if {%3} == {/a} goto :RebuildallFound
 if /i {%3} == {-WDF} goto :WDFFound
 if /i {%3} == {-PREFAST} goto :PrefastFound
 set bscFlags=/n
-:: Old line: set bflags=%bflags% %3 -e
 set bflags=%bflags% %3 -e
 :: Remove first arg
 shift
@@ -617,7 +606,6 @@ pushd .
 call %WDF_ROOT%\set_wdf_env.cmd
 popd
 :WDFOkay
-:: set OSR_DEBUG=on We don't need that here
 goto :ContinueParsing
 
 :PrefastFound
@@ -630,66 +618,74 @@ shift
 set bscFlags=/n
 set bflags=-cfeZ
 goto :ContinueParsing
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :DONE
 
-if exist "build%W2kEXT%.err"   erase /f /q "build%W2kEXT%.err"
-if exist "build%W2kEXT%.wrn2"   erase /f /q "build%W2kEXT%.wrn"
-if exist "build%W2kEXT%.log"   erase /f /q "build%W2kEXT%.log"
-if exist "prefast%W2kEXT%.log" erase /f /q "prefast%W2kEXT%.log"
+if exist "build%OSR_EXT%.err"   erase /f /q "build%OSR_EXT%.err"
+if exist "build%OSR_EXT%.wrn2"   erase /f /q "build%OSR_EXT%.wrn"
+if exist "build%OSR_EXT%.log"   erase /f /q "build%OSR_EXT%.log"
+if exist "prefast%OSR_EXT%.log" erase /f /q "prefast%OSR_EXT%.log"
 
 if not {%prefast_build%} == {0} goto :RunPrefastBuild
-@echo Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory%
+%OSR_ECHO% Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
 pushd .
 build  %bflags% %mpFlag%
+popd
 goto :BuildComplete
 
 :RunPrefastBuild
-@echo Run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory%
-pushd .
-setlocal
-set PREFASTLOG=PREfast_defects_%W2kEXT%.xml
+%OSR_ECHO% Run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
+setlocal ENABLEEXTENSIONS & pushd .
+set PREFASTLOG=PREfast_defects_%OSR_EXT%.xml
 prefast /log=%PREFASTLOG% /reset build  %bflags% %mpFlag% > NUL
 if "%errorlevel%" GTR "0" set OSR_ERRCODE=%errorlevel%
-prefast /log=%PREFASTLOG% list > prefast%W2kEXT%.log
-echo The PREfast logfile is ^"%prefastlog%^"!
-endlocal
+prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
+%OSR_ECHO% The PREfast logfile is ^"%prefastlog%^"!
+popd & endlocal
 
 :BuildComplete
 if not {%errorlevel%} == {0} set OSR_ERRCODE=%errorlevel%
-popd
 
 @echo %OSR_DEBUG%
-
 :: Assume that the onscreen errors are complete!
 setlocal
 set WARNING_FILE_COUNT=0
-set WARNING_OUTPUT=0
-if exist "build%W2kEXT%.wrn" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
-if exist "build%W2kEXT%.log" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
-if not {%WARNING_FILE_COUNT%} == {0} (
-  @echo ================ Build warnings =======================
-  if exist "build%W2kEXT%.wrn" findstr "warning[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
-  if exist "build%W2kEXT%.log" findstr "error[^.][DRCLU][0-9]*" "build%W2kEXT%.log"
-  set /a WARNING_OUTPUT=%WARNING_OUTPUT%+1
+if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
+  set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
-set WARNING_FILE_COUNT=0
-if exist "prefast%W2kEXT%.log" set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
+if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
+  set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
+)
+if not {%WARNING_FILE_COUNT%} == {0} (
+  %OSR_ECHO% ================ Build warnings =======================
+  if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
+    %OSR_ECHO% %%x
+  )
+  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
+    %OSR_ECHO% %%x
+  )
+)
+set WARNING_FILE_COUNT_PRE=0
+if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
+  set /a WARNING_FILE_COUNT_PRE=%WARNING_FILE_COUNT_PRE%+1
+)
 :: Reset if this is no PREfast build
-if {%prefast_build%} == {0} set WARNING_FILE_COUNT=0
-if not {%WARNING_FILE_COUNT%} == {0} (
-  @echo =============== PREfast warnings ======================
-  if exist "prefast%W2kEXT%.log" findstr "warning[^.][CLU]*" "prefast%W2kEXT%.log"
-  set /a WARNING_OUTPUT=%WARNING_OUTPUT%+1
+if {%prefast_build%} == {0} set WARNING_FILE_COUNT_PRE=0
+if not {%WARNING_FILE_COUNT_PRE%} == {0} (
+  %OSR_ECHO% =============== PREfast warnings ======================
+  if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
+    %OSR_ECHO% %%x
+  )
 )
-if not {%WARNING_OUTPUT%} == {0} (
-  @echo =======================================================
+set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+%WARNING_FILE_COUNT_PRE%
+if not {%WARNING_FILE_COUNT%} == {0} (
+  %OSR_ECHO% =======================================================
 )
 endlocal
 @echo.
-@echo.
-@echo Build complete
-@echo Building browse information files
+%OSR_ECHO% Build complete
+%OSR_ECHO% Building browse information files
 if exist "buildbrowse.cmd" call "buildbrowse.cmd" & goto :postBuildSteps
 set sbrlist=sbrList.txt
 if not exist sbrList%CPU%.txt goto :sbrDefault
@@ -704,13 +700,54 @@ bscmake%bscFlags% @%sbrlist%
 
 :: Perform whatever post-build steps
 :postBuildSteps
-@if exist %buildDirectory%\ddkpostbld.cmd @(
-  echo Performing post build steps ...
-  call %buildDirectory%\ddkpostbld.cmd
+:: Restore the current directory (after changing into the build directory!)
+:: Search upwards for "AFTERPREBUILD" to find the corresponding PUSHD
+popd
+@if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
+  %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
+  setlocal ENABLEEXTENSIONS & pushd "%buildDirectory%"
+  for /f "tokens=*" %%x in ('call "%OSR_POSTBUILD_SCRIPT%"') do @(
+    %OSR_ECHO% %%x
+  )
+  popd & endlocal
+  %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
 goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: \ MAIN function of the script
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::  / GetCustomEnvironment
+::    First parameter is the "directory" that supposedly contains the SOURCES
+::    or DIRS file (and the build scripts)
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:GetCustomEnvironment
+pushd .
+call :CheckTargets %1
+@if not {%OSR_ERRCODE%} == {0} @(
+  echo.
+  %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
+  %OSR_ECHO% when trying to set a custom environment! Quitting.
+  set buildDirectory=%~f1
+  if {%OSR_ERRCODE%} == {6} call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
+  call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret
+  goto :GetCustomEnvironment_ret
+)
+@if exist "%1\%OSR_SETENV_SCRIPT%" @(
+  %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+  pushd "%1"
+  for /f "tokens=*" %%x in ('call "%OSR_SETENV_SCRIPT%"') do @(
+    %OSR_ECHO% %%x
+  )
+  popd
+  %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+)
+:GetCustomEnvironment_ret
+popd
+goto :EOF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::  \ GetCustomEnvironment
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -742,7 +779,7 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :CheckTargets
 :: Building "stack frame"
-setlocal & pushd & set OSR_ERRCODE=0
+setlocal & pushd . & set OSR_ERRCODE=0
 if not {%1} == {} goto :CheckTargets1
 set OSR_ERRCODE=7
 goto :CheckTargets_ret
@@ -777,19 +814,18 @@ goto :EOF
 ::   There is only one parameter, the name of the variable to be resolved!
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ResolveVar
-set OSR_TEMP=%1
-set OSR_TEMPRET2=%%%OSR_TEMP%%%
+:: Get the name of the variable we are working with
+setlocal ENABLEEXTENSIONS & set VAR_NAME=%1
+set VAR_TEMPRET2=%%%VAR_NAME%%%
 :ResolveVarLoop
-set OSR_TEMPRET1=%OSR_TEMPRET2%
-set OSR_TEMPRET2=%OSR_TEMPRET1%
-for /f "tokens=*" %%i in ('echo %OSR_TEMPRET1%') do (
-  set %OSR_TEMP%=%%i
-  set OSR_TEMPRET2=%%i
+set VAR_TEMPRET1=%VAR_TEMPRET2%
+set VAR_TEMPRET2=%VAR_TEMPRET1%
+for /f "tokens=*" %%i in ('echo %VAR_TEMPRET1%') do (
+  set VAR_TEMPRET2=%%i
 )
-if not {%OSR_TEMPRET1%} == {%OSR_TEMPRET2%} goto :ResolveVarLoop
-set OSR_TEMP=
-set OSR_TEMPRET1=
-set OSR_TEMPRET2=
+if not "%VAR_TEMPRET1%" == "%VAR_TEMPRET2%" goto :ResolveVarLoop
+:: Re-export the variable out of the local scope
+endlocal & set %VAR_NAME%=%VAR_TEMPRET1%
 goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: / ResolveVar subroutine
@@ -801,13 +837,13 @@ goto :EOF
 ::   message which is returned to the user along with the usage hints.
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ShowErrorMsg
-@set OSR_ERRCODE=%1
-@set OSR_ERRMSG=%2
-@set OSR_ERRMSG=%OSR_ERRMSG:"=%
+@set OSR_ERRCODE=%~1
+@set OSR_ERRMSG=%~2
 @set OSR_ERRMSG=%OSR_ERRMSG:'="%
 @set OSR_ERRMSG=ERROR #%OSR_ERRCODE%: %OSR_ERRMSG%
 @echo.
-@echo %OSR_ERRMSG%
+%OSR_ECHO% %OSR_ERRMSG%
+if DEFINED buildDirectory %OSR_ECHO% -^> Target directory: %buildDirectory%
 goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: \ ErrorWithUsage subroutine
@@ -819,49 +855,73 @@ goto :EOF
 :USAGE
 @echo.
 @echo Syntax:
+@echo -------
 @echo ddkbuild ^<platform^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
-@echo Platform values:
-@echo       -W2K       to indicate W2K        build using %%W2KBASE%%
-@echo       -W2K64     to indicate W2K  IA64  build using %%W2KBASE%%
-@echo       -WXP       to indicate WXP        build using %%WXPBASE%%
-@echo       -WXP64     to indicate WXP  IA64  build using %%WXPBASE%%
-@echo       -WXP2K     to indicate W2K        build using %%WXPBASE%%
-@echo       -WNET      to indicate WNET       build using %%WNETBASE%%
-@echo       -WNET64    to indicate WNET IA64  build using %%WNETBASE%% (= -WNETI64)
-@echo       -WNETXP    to indicate WXP        build using %%WNETBASE%%
-@echo       -WNETXP64  to indicate WXP  IA64  build using %%WNETBASE%%
-@echo       -WNETAMD64 to indicate WNET AMD64 build using %%WNETBASE%% (= -WNETX64)
-@echo       -WNET2K    to indicate W2K        build using %%WNETBASE%%
-@echo       -WLH       to indicate WLH        build using %%WLHBASE%%
-@echo       -WLH2K     to indicate W2K        build using %%WLHBASE%%
-@echo       -WLHXP     to indicate WXP        build using %%WLHBASE%%
-@echo       -WLHNET    to indicate WNET       build using %%WLHBASE%%
-@echo       -WLHNETI64 to indicate WNET IA64  build using %%WLHBASE%%
-@echo       -WLHNETX64 to indicate WNET AMD64 build using %%WLHBASE%%
-@echo       -WLHI64    to indicate WLH IA64   build using %%WLHBASE%%
-@echo       -WLHX64    to indicate WLH AMD64  build using %%WLHBASE%%
-@echo       -NT4       to indicate NT4        build using %%NT4BASE%%
+@echo Values for ^<platform^>:
 @echo.
-@echo Build types:
-@echo        checked
-@echo        chk       indicates a checked build
-@echo        free
-@echo        fre       indicates a free build
+@echo      -------------------------------------------------------------
+@echo       Target platform and DDK   ^| Miscellaneous
+@echo      ---------------------------^|---------------------------------
+@echo       Platform   ^| DDK   ^| CPU  ^| Base directory ^| Platform alias
+@echo      ------------^|-------^|------^|----------------^|----------------
+@echo       -W2K       ^| W2K   ^| x86  ^| %%W2KBASE%%      ^|
+@echo       -W2K64     ^| W2K   ^| IA64 ^| %%W2KBASE%%      ^| -W2KI64
+@echo       -WXP       ^| WXP   ^| x86  ^| %%WXPBASE%%      ^|
+@echo       -WXP64     ^| WXP   ^| IA64 ^| %%WXPBASE%%      ^| -WXPI64
+@echo       -WXP2K     ^| W2K   ^| x86  ^| %%WXPBASE%%      ^|
+@echo       -WNET      ^| WNET  ^| x86  ^| %%WNETBASE%%     ^|
+@echo       -WNET64    ^| WNET  ^| IA64 ^| %%WNETBASE%%     ^| -WNETI64
+@echo       -WNETXP    ^| WXP   ^| x86  ^| %%WNETBASE%%     ^|
+@echo       -WNETXP64  ^| WXP   ^| IA64 ^| %%WNETBASE%%     ^|
+@echo       -WNETAMD64 ^| WNET  ^| x64  ^| %%WNETBASE%%     ^| -WNETX64
+@echo       -WNET2K    ^| W2K   ^| x86  ^| %%WNETBASE%%     ^|
+@echo       -WLH       ^| WLH   ^| x86  ^| %%WLHBASE%%      ^|
+@echo       -WLH2K     ^| W2K   ^| x86  ^| %%WLHBASE%%      ^|
+@echo       -WLHXP     ^| WXP   ^| x86  ^| %%WLHBASE%%      ^|
+@echo       -WLHNET    ^| WNET  ^| x86  ^| %%WLHBASE%%      ^|
+@echo       -WLHNETI64 ^| WNET  ^| IA64 ^| %%WLHBASE%%      ^|
+@echo       -WLHNETX64 ^| WNET  ^| x64  ^| %%WLHBASE%%      ^|
+@echo       -WLHI64    ^| WLH   ^| IA64 ^| %%WLHBASE%%      ^|
+@echo       -WLHX64    ^| WLH   ^| x64  ^| %%WLHBASE%%      ^|
+@echo       -NT4       ^| NT4   ^| x86  ^| %%NT4BASE%%      ^|
+@echo      -------------------------------------------------------------
 @echo.
-@echo Remaining parameters:
-@echo        directory path to build directory, try . (cwd)
-@echo        flags     any random flags you think should be passed to build (try /a
-@echo                  for clean)
-@echo       -WDF       performs a WDF build
-@echo       -PREFAST   performs a PREFAST build
+@echo Values for ^<build type^>:
+@echo        checked, chk    indicates a checked build
+@echo        free, fre       indicates a free build
+@echo.
+@echo Remaining parameters ("opt!" = optional parameter):
+@echo        ^<directory^>     path to build directory, try . (cwd)
+@echo        [flags]   opt!  any flags you think should be passed to build (try /a
+@echo                        for clean)
+@echo       -WDF       opt!  performs a WDF build
+@echo       -PREFAST   opt!  performs a PREFAST build
+@echo.
+@echo Special files:
+@echo        The build target directory (where the DIRS or SOURCES file resides) can
+@echo        contain the following files:
+@echo        - %OSR_PREBUILD_SCRIPT%
+@echo          Allows to include a step before the BUILD tool from the DDK is called
+@echo          but after the environment for the respective DDK has been set!
+@echo        - %OSR_POSTBUILD_SCRIPT%
+@echo          Allows to include a step after the BUILD tool from the DDK is called,
+@echo          so the environment is still available to the script.
+@echo        - %OSR_SETENV_SCRIPT%
+@echo          Allows to set (or override) _any_ environment variables that may exist
+@echo          in the global environment. Thus you can set the base directory for the
+@echo          DDK from inside this script, making your project more self-contained.
+@echo.
+@echo        DDKBUILD will only handle those files which exist, so you may choose to
+@echo        use none, one or multiple of these script files.
+@echo        (All scripts execute inside there current directory. Consider this!)
 @echo.
 @echo Examples:
 @echo       ^"ddkbuild -NT4 checked .^" (for NT4 BUILD)
 @echo       ^"ddkbuild -WXP64 chk .^"
 @echo       ^"ddkbuild -WXP chk c:\projects\myproject^"
-@echo       ^"ddkbuild -WNET64 chk .^"      (IA64 bit build)
-@echo       ^"ddkbuild -WNETAMD64 chk .^"   (AMD64/EM64T bit build)
+@echo       ^"ddkbuild -WNET64 chk .^"      (IA64 build)
+@echo       ^"ddkbuild -WNETAMD64 chk .^"   (AMD64/EM64T build)
 @echo       ^"ddkbuild -WNETXP chk . -cZ -WDF^"
 @echo       ^"ddkbuild -WNETXP chk . -cZ -PREFAST^"
 @echo.
@@ -883,6 +943,4 @@ goto :EOF
 @echo.
 
 :END
-popd & endlocal
-exit /b %OSR_ERRCODE%
-@echo ddkbuild complete
+popd & endlocal & exit /b %OSR_ERRCODE%

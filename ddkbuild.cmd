@@ -1,4 +1,5 @@
 @echo off
+@set VERSION=V7.2
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -130,12 +131,19 @@ setlocal ENABLEEXTENSIONS & pushd .
 :: Check whether the REG utility is available
 reg /? > NUL 2>&1 && set OSR_REGAVAILABLE=1
 
-@set SVN_REVISION=$Revision$
-@set SVN_REVDATE=$Date$
-@set VERSION=V7.%SVN_REVISION%
+:: This is set by client-side keyword substitution
+set SVN_REVISION=$Revision$
+:: Extract the revision number from the revision keyword
+set SVN_REVISION=%SVN_REVISION:~0,-2%
+set SVN_REVISION=%SVN_REVISION:~11%
+:: This is set by client-side keyword substitution
+set SVN_REVDATE=$Date$
+:: Extract the date from the Date keyword
+set SVN_REVDATE=%SVN_REVDATE:~7,10%
+set VERSION=%VERSION%/r%SVN_REVISION%
 
 :: Init some special variables
-set OSR_VERSTR=OSR DDKBUILD.CMD %VERSION% (%REVDATE%) - OSR, Open Systems Resources, Inc.
+set OSR_VERSTR=OSR DDKBUILD.CMD %VERSION% (%SVN_REVDATE%) - OSR, Open Systems Resources, Inc.
 set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd

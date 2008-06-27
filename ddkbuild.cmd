@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.1
-@set REVDATE=2008-03-21
+@set REVISION=V7.2
+@set REVDATE=2008-04-14
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -191,7 +191,7 @@ set OSR_ERRCODE=3
 :: Calling as a subroutine has 2 advantages:
 :: 1. the script does not quit if the label was not found
 :: 2. we return to the line after the call and can check variables there
-call :%OSR_TARGET%Check
+call :%OSR_TARGET%Check > NUL 2>&1
 :: If the BASEDIROS/BASEDIRVAR variable is not defined, it means the subroutine did not exist!
 if not DEFINED BASEDIROS call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIROS)" & goto :USAGE
 if not DEFINED BASEDIRVAR call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIRVAR)" & goto :USAGE
@@ -224,6 +224,14 @@ goto :CommonBuild
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: These labels are for compatibility with the respective
+:: modes supported by another flavor of DDKBUILD.
+:WLH64Check
+:WLHA64Check
+:WLHXP64Check
+:WLHNET64Check
+:WLHNETA64Check
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :WLHCheck
 :WLHX64Check
 :WLHI64Check
@@ -244,6 +252,11 @@ if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithRetur
 goto :CommonCheckErrorNotSupportedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: These labels are for compatibility with the respective
+:: modes supported by another flavor of DDKBUILD.
+:WNETW2KCheck
+:WNETA64Check
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :WNET2KCheck
 :WNETXPCheck
 :WNETXP64Check
@@ -261,12 +274,20 @@ if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithRetur
 goto :CommonCheckErrorNotDetectedWithReturn
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: These labels are for compatibility with the respective
+:: modes supported by another flavor of DDKBUILD.
+:XPCheck
+:XP64Check
+:XPW2KCheck
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :WXP64Check
 :WXPI64Check
 :WXPCheck
 :WXP2KCheck
 set BASEDIROS=Windows XP
 set BASEDIRVAR=WXPBASE
+:: Other flavor of DDKBUILD
+if not DEFINED WXPBASE if DEFINED XPBASE set BASEDIRVAR=XPBASE
 :: Return to caller if the BASEDIR is already defined (either customized or global)
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
 call :DetectBaseDirTemp "2600.1106 2600"
@@ -348,6 +369,7 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using WXP DDK
+:XPW2KBuild
 :WXP2KBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\w2k\set2k.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
@@ -367,6 +389,7 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 64bit (Intel) using WXP DDK
+:XP64Build
 :WXP64Build
 :WXPI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64
@@ -374,12 +397,14 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 32bit using WXP DDK
+:XPBuild
 :WXPBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W2K build for 32bit using WNET DDK
+:WNETW2KBuild
 :WNET2KBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% W2K %%BuildMode%%
 goto :EOF
@@ -405,6 +430,7 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (AMD) using WNET DDK
+:WNETA64Build
 :WNETAMD64Build
 :WNETX64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% AMD64 WNET
@@ -424,6 +450,7 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (AMD) using WLH DDK
+:WLHA64Build
 :WLHX64Build
 call :DetectVistaWDK
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD64FLAG% WLH
@@ -431,12 +458,14 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (Intel) using WLH DDK
+:WLH64Build
 :WLHI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (AMD) using WLH DDK
+:WLHNETA64Build
 :WLHNETX64Build
 call :DetectVistaWDK
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD64FLAG% WNET
@@ -444,6 +473,7 @@ goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (Intel) using WLH DDK
+:WLHNET64Build
 :WLHNETI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WNET
 goto :EOF
@@ -452,6 +482,12 @@ goto :EOF
 :: WXP build for 32bit using WLH DDK
 :WLHXPBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WXP
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WXP build for 64bit (Intel) using WLH DDK
+:WLHXP64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -588,11 +624,9 @@ goto :ContinueParsing
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :DONE
-
-if exist "build%OSR_EXT%.err"   del /f /q "build%OSR_EXT%.err"
-if exist "build%OSR_EXT%.wrn2"  del /f /q "build%OSR_EXT%.wrn"
-if exist "build%OSR_EXT%.log"   del /f /q "build%OSR_EXT%.log"
-if exist "prefast%OSR_EXT%.log" del /f /q "prefast%OSR_EXT%.log"
+for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do @(
+  if exist "%%x"   del /f /q "%%x"
+)
 
 if not "%prefast_build%" == "0" goto :RunPrefastBuild
 %OSR_ECHO% Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
@@ -618,18 +652,12 @@ if not "%errorlevel%" == "0" set OSR_ERRCODE=%errorlevel%
 :: Assume that the onscreen errors are complete!
 setlocal
 set WARNING_FILE_COUNT=0
-if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
-  set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
-)
-if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
+if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9][0-9]* error[^.][DRCLU][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
   set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
 if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
-  if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
-    @echo %%x
-  )
-  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
+  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9][0-9]* error[^.][DRCLU][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
     @echo %%x
   )
 )
@@ -999,6 +1027,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       -WLH       ^| WLH   ^| x86  ^| %%WLHBASE%%      ^|
 @echo       -WLH2K     ^| W2K   ^| x86  ^| %%WLHBASE%%      ^|
 @echo       -WLHXP     ^| WXP   ^| x86  ^| %%WLHBASE%%      ^|
+@echo       -WLHXP64   ^| WXP   ^| IA64 ^| %%WLHBASE%%      ^|
 @echo       -WLHNET    ^| WNET  ^| x86  ^| %%WLHBASE%%      ^|
 @echo       -WLHNETI64 ^| WNET  ^| IA64 ^| %%WLHBASE%%      ^|
 @echo       -WLHNETX64 ^| WNET  ^| x64  ^| %%WLHBASE%%      ^|

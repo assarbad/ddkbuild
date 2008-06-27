@@ -1,6 +1,4 @@
 @echo off
-@set REVISION=V7.2
-@set REVDATE=2008-04-14
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -9,6 +7,8 @@ goto :EOF
 :: Check whether FINDSTR is available. It's used to show warnings etc.
 findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::
+::    $Id$
 ::
 ::    This software is supplied for instructional purposes only.
 ::
@@ -130,8 +130,12 @@ setlocal ENABLEEXTENSIONS & pushd .
 :: Check whether the REG utility is available
 reg /? > NUL 2>&1 && set OSR_REGAVAILABLE=1
 
+@set SVN_REVISION=$Revision$
+@set SVN_REVDATE=$Date$
+@set VERSION=V7.%SVN_REVISION%
+
 :: Init some special variables
-set OSR_VERSTR=OSR DDKBUILD.CMD %REVISION% (%REVDATE%) - OSR, Open Systems Resources, Inc.
+set OSR_VERSTR=OSR DDKBUILD.CMD %VERSION% (%REVDATE%) - OSR, Open Systems Resources, Inc.
 set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
@@ -1005,39 +1009,39 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 @echo USAGE:
 @echo ======
-@echo %~n0 ^<platform^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
+@echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
-@echo Values for ^<platform^>:
-@echo      -------------------------------------------------------------
-@echo       Target platform and DDK   ^| Miscellaneous
-@echo      ---------------------------^|---------------------------------
-@echo       Platform   ^| DDK   ^| CPU  ^| Base directory ^| Platform alias
-@echo      ------------^|-------^|------^|----------------^|----------------
-@echo       -W2K       ^| W2K   ^| x86  ^| %%W2KBASE%%      ^|
-@echo       -W2K64     ^| W2K   ^| IA64 ^| %%W2KBASE%%      ^| -W2KI64
-@echo       -WXP       ^| WXP   ^| x86  ^| %%WXPBASE%%      ^|
-@echo       -WXP64     ^| WXP   ^| IA64 ^| %%WXPBASE%%      ^| -WXPI64
-@echo       -WXP2K     ^| W2K   ^| x86  ^| %%WXPBASE%%      ^|
-@echo       -WNET      ^| WNET  ^| x86  ^| %%WNETBASE%%     ^|
-@echo       -WNET64    ^| WNET  ^| IA64 ^| %%WNETBASE%%     ^| -WNETI64
-@echo       -WNETXP    ^| WXP   ^| x86  ^| %%WNETBASE%%     ^|
-@echo       -WNETXP64  ^| WXP   ^| IA64 ^| %%WNETBASE%%     ^|
-@echo       -WNETAMD64 ^| WNET  ^| x64  ^| %%WNETBASE%%     ^| -WNETX64
-@echo       -WNET2K    ^| W2K   ^| x86  ^| %%WNETBASE%%     ^|
-@echo       -WLH       ^| WLH   ^| x86  ^| %%WLHBASE%%      ^|
-@echo       -WLH2K     ^| W2K   ^| x86  ^| %%WLHBASE%%      ^|
-@echo       -WLHXP     ^| WXP   ^| x86  ^| %%WLHBASE%%      ^|
-@echo       -WLHXP64   ^| WXP   ^| IA64 ^| %%WLHBASE%%      ^|
-@echo       -WLHNET    ^| WNET  ^| x86  ^| %%WLHBASE%%      ^|
-@echo       -WLHNETI64 ^| WNET  ^| IA64 ^| %%WLHBASE%%      ^|
-@echo       -WLHNETX64 ^| WNET  ^| x64  ^| %%WLHBASE%%      ^|
-@echo       -WLHI64    ^| WLH   ^| IA64 ^| %%WLHBASE%%      ^|
-@echo       -WLHX64    ^| WLH   ^| x64  ^| %%WLHBASE%%      ^|
-@echo       -NT4       ^| NT4   ^| x86  ^| %%NT4BASE%%      ^|
-@echo      -------------------------------------------------------------
-@echo       Support for NT4 and W2K DDKs is deprecated and not checked
-@echo       anymore in new versions. It may or may not work.
-@echo      -------------------------------------------------------------
+@echo Values for ^<target^>:
+@echo    --------------------------------------------------------------------------
+@echo     Target platform and OS   ^| Miscellaneous
+@echo    --------------------------^|-----------------------------------------------
+@echo     Target     ^| Windows     ^| CPU     ^| Base directory ^| Target alias(es)
+@echo    ------------^|-------------^|---------^|----------------^|--------------------
+@echo     -W2K       ^| 2000        ^| x86     ^| %%W2KBASE%%      ^|
+@echo     -W2K64     ^| 2000        ^| Itanium ^| %%W2KBASE%%      ^| -W2KI64
+@echo     -WXP       ^| XP          ^| x86     ^| %%WXPBASE%%      ^| -XP
+@echo     -WXP64     ^| XP          ^| Itanium ^| %%WXPBASE%%      ^| -WXPI64, -XP64
+@echo     -WXP2K     ^| 2000        ^| x86     ^| %%WXPBASE%%      ^| -XPW2K
+@echo     -WNET      ^| 2003        ^| x86     ^| %%WNETBASE%%     ^|
+@echo     -WNET64    ^| 2003        ^| Itanium ^| %%WNETBASE%%     ^| -WNETI64
+@echo     -WNETXP    ^| XP          ^| x86     ^| %%WNETBASE%%     ^|
+@echo     -WNETXP64  ^| XP          ^| Itanium ^| %%WNETBASE%%     ^|
+@echo     -WNETAMD64 ^| 2003/XP x64 ^| x64     ^| %%WNETBASE%%     ^| -WNETX64, -WNETA64
+@echo     -WNET2K    ^| 2000 SP3    ^| x86     ^| %%WNETBASE%%     ^| -WNETW2K
+@echo     -WLH       ^| Vista/2008  ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLH2K     ^| 2000 SP4    ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHXP     ^| XP          ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHXP64   ^| XP          ^| Itanium ^| %%WLHBASE%%      ^|
+@echo     -WLHNET    ^| 2003        ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHNETI64 ^| 2003        ^| Itanium ^| %%WLHBASE%%      ^| -WLHNET64
+@echo     -WLHNETX64 ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%      ^| -WLHNETA64
+@echo     -WLHI64    ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%      ^| -WLH64
+@echo     -WLHX64    ^| Vista/2008  ^| x64     ^| %%WLHBASE%%      ^| -WLHA64
+@echo     -NT4       ^| NT 4.0      ^| x86     ^| %%NT4BASE%%      ^|
+@echo    --------------------------------------------------------------------------
+@echo     Support for NT4 and W2K DDKs is deprecated and not checked anymore
+@echo     in new versions. It may or may not work properly.
+@echo    --------------------------------------------------------------------------
 @echo.
 @echo Values for ^<build type^>:
 @echo       checked, chk     indicates a checked build
@@ -1097,7 +1101,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 @echo.
 @echo   %OSR_VERSTR%
-@echo   -^> report any problems found to info@osr.com or http://assarbad.net/contact
+@echo   -^> report any problems found to info@osr.com or http://assarbad.net/contact/
 @echo.
 
 :END

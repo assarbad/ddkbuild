@@ -1,6 +1,6 @@
 @echo off
-@set REVISION=V7.0 RC3
-@set REVDATE=2007-09-12
+@set REVISION=V7.0 (final)
+@set REVDATE=2008-01-20
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :MAIN
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -666,10 +666,10 @@ if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DR
 if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
   if exist "build%OSR_EXT%.wrn" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.wrn"') do @(
-    %OSR_ECHO% %%x
+    @echo %%x
   )
   if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9]*" "build%OSR_EXT%.log"') do @(
-    %OSR_ECHO% %%x
+    @echo %%x
   )
 )
 set WARNING_FILE_COUNT_PRE=0
@@ -681,7 +681,7 @@ if "%prefast_build%" == "0" set WARNING_FILE_COUNT_PRE=0
 if not "%WARNING_FILE_COUNT_PRE%" == "0" (
   %OSR_ECHO% =============== PREfast warnings ======================
   if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
-    %OSR_ECHO% %%x
+    @echo %%x
   )
 )
 set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+%WARNING_FILE_COUNT_PRE%

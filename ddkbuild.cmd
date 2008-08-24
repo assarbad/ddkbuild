@@ -606,8 +606,8 @@ if "%3" == "/a" goto :RebuildallFound
 if /i "%3" == "-WDF" goto :WDFFound
 if /i "%3" == "-PREFAST" goto :PrefastFound
 set bscFlags=/n
-set bflags=%bflags% %3 -e
-:: Remove first arg
+set bflags=%bflags% %3
+:: Remove next arg
 shift
 goto :ContinueParsing
 
@@ -631,7 +631,8 @@ goto :ContinueParsing
 :RebuildallFound
 shift
 set bscFlags=/n
-set bflags=-cfeZ
+set bflags=%bflags:-Ze=-cfeZ%
+set bflags=%bflags: -cZ=%
 goto :ContinueParsing
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

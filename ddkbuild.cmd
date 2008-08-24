@@ -596,7 +596,7 @@ if /i "%OSR_ARGS%" == " + argument(s):" set OSR_ARGS=
 %OSR_ECHO% %BASEDIRVAR%: %BASEDIR%
 
 cd /D %~s2
-set bflags=-Ze
+set bFlags=-Ze
 set bscFlags=
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -606,7 +606,7 @@ if "%3" == "/a" goto :RebuildallFound
 if /i "%3" == "-WDF" goto :WDFFound
 if /i "%3" == "-PREFAST" goto :PrefastFound
 set bscFlags=/n
-set bflags=%bflags% %3
+set bFlags=%bFlags% %3
 :: Remove next arg
 shift
 goto :ContinueParsing
@@ -631,8 +631,8 @@ goto :ContinueParsing
 :RebuildallFound
 shift
 set bscFlags=/n
-set bflags=%bflags:-Ze=-cfeZ%
-set bflags=%bflags: -cZ=%
+set bFlags=%bFlags:-Ze=-cfeZ%
+set bFlags=%bFlags: -cZ=%
 goto :ContinueParsing
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -642,17 +642,17 @@ for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR
 )
 
 if not "%prefast_build%" == "0" goto :RunPrefastBuild
-%OSR_ECHO% Run build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
+%OSR_ECHO% Run build %mpFlag% %bFlags% for %BuildMode% version in %buildDirectory_raw%
 pushd .
-build  %bflags% %mpFlag%
+build %mpFlag% %bFlags%
 popd
 goto :BuildComplete
 
 :RunPrefastBuild
-%OSR_ECHO% Run prefast build %bflags% %mpFlag% for %BuildMode% version in %buildDirectory_raw%
+%OSR_ECHO% Run prefast build %mpFlag% %bFlags% for %BuildMode% version in %buildDirectory_raw%
 setlocal ENABLEEXTENSIONS & pushd .
 set PREFASTLOG=PREfast_defects_%OSR_EXT%.xml
-prefast /log=%PREFASTLOG% /reset build  %bflags% %mpFlag% > NUL 2>&1
+prefast /log=%PREFASTLOG% /reset build %mpFlag% %bFlags% > NUL 2>&1
 if "%errorlevel%" GTR "0" set OSR_ERRCODE=%errorlevel%
 prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
 %OSR_ECHO% The PREfast logfile is ^"%prefastlog%^"!
@@ -1108,6 +1108,8 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       %%WDF_ROOT%% must be set if attempting to do a WDF Build previous to the
 @echo       Vista WDK (in later DDKs there is no need to set WDF_ROOT).
 @echo.
+@echo Path to this script:
+@echo      %~f0
 @echo.
 @echo   %OSR_VERSTR%
 @echo   -^> report any problems found to info@osr.com or http://assarbad.net/contact/

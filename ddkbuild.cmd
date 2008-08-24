@@ -1,5 +1,5 @@
 @echo off
-@set VERSION=V7.2
+@set VERSION=V7.3
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!

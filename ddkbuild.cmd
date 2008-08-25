@@ -32,7 +32,8 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::    OSR Open Systems Resources, Inc.
 ::    105 Route 101A Suite 19
 ::    Amherst, NH 03031  (603) 595-6500 FAX: (603) 595-6503
-::    report bugs to bugs@osr.com or http://assarbad.net/contact/
+::    report bugs to <bugs@osr.com>
+::    alternatively report them via <http://assarbad.net/contact/>
 ::
 ::
 ::    MODULE:
@@ -1112,7 +1113,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo      %~f0
 @echo.
 @echo   %OSR_VERSTR%
-@echo   -^> report any problems found to info@osr.com or http://assarbad.net/contact/
+@echo   -^> report any problems to ^<info@osr.com^> or ^<http://assarbad.net/contact/^>
 @echo.
 
 :END

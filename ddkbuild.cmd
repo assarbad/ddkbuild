@@ -32,7 +32,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::    OSR Open Systems Resources, Inc.
 ::    105 Route 101A Suite 19
 ::    Amherst, NH 03031  (603) 595-6500 FAX: (603) 595-6503
-::    email bugs to: bugs@osr.com
+::    report bugs to bugs@osr.com or http://assarbad.net/contact/
 ::
 ::
 ::    MODULE:
@@ -41,7 +41,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::
 ::    ABSTRACT:
 ::
-::      This script allows drivers to be build with Visual Studio 2002 through
+::      This script allows drivers to be built with Visual Studio 2002 through
 ::      (.NET) Visual Studio 2008 and possibly future versions. It will also
 ::      work fine from the command line.
 ::      If you are interested in a project wizard that makes use of this script,

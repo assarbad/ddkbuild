@@ -43,8 +43,8 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::    ABSTRACT:
 ::
 ::      This script allows drivers to be built with Visual Studio 2002 through
-::      (.NET) Visual Studio 2008 and possibly future versions. It will also
-::      work fine from the command line.
+::      Visual Studio 2008 and possibly future versions. It will also work fine
+::      from the command line.
 ::      If you are interested in a project wizard that makes use of this script,
 ::      try DDKWizard from <http://ddkwizard.assarbad.net>.
 ::
@@ -94,10 +94,10 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::    BROWSE FILES:
 ::
 ::      This procedure supports the building of BROWSE files to be used by
-::      Visual Studio 6 and by Visual Studio.Net  However, the BSCfiles created
-::      by bscmake for the 2 studios are not compatible. When this command procedure
-::      runs, it selects the first bscmake.exe found in the path.   So, make
-::      sure that the correct bscmake.exe is in the path....
+::      Visual Studio 6 and by Visual Studio.NET  However, the BSCfiles created
+::      by bscmake for the two are not compatible. When this command procedure
+::      runs, it selects the first bscmake.exe found in the path. So, make sure
+::      that the correct bscmake.exe is in the path ...
 ::
 ::      Note that if using Visual Studio.NET the .BSC must be added to the project
 ::      in order for the project to be browsed.
@@ -106,7 +106,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::
 ::    COMPILERS:
 ::
-::      If you are building NT4 you should really be using the VC 6 compiler.
+::      If you are building NT4 you should really be using the VC6 compiler.
 ::      Later versions of the DDK now contain the compiler and the linker. This
 ::      procedure should use the correct compiler.
 ::
@@ -114,7 +114,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::
 ::      This procedure has been cleaned up to be modular and easy to understand.
 ::
-::      As of the Server 2003 SP1 DDK ddkbuild now clears the NO_BROWSE_FILE and
+::      As of the Server 2003 SP1 DDK DDKBUILD now clears the NO_BROWSE_FILE and
 ::      NO_BINPLACE environment variables so that users can use these features.
 ::
 ::      Starting with the Vista WDK, the output in the respective tool window

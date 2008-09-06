@@ -1080,7 +1080,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 @echo       DDKBUILD will only handle those files which exist, so you may choose to
 @echo       use none, one or multiple of these script files.
-@echo       (All scripts execute inside there current directory. Consider this!)
+@echo       (All scripts execute inside their current directory. Consider this!)
 @echo.
 @echo Examples:
 @echo       ^"%~n0 -NT4 checked .^" (for NT4 BUILD)

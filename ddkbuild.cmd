@@ -666,12 +666,12 @@ if not "%errorlevel%" == "0" set OSR_ERRCODE=%errorlevel%
 :: Assume that the onscreen errors are complete!
 setlocal
 set WARNING_FILE_COUNT=0
-if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9][0-9]* error[^.][DRCLU][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
+if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][C0-9][0-9]* error[^.][DRCLU][C0-9][0-9]*" "build%OSR_EXT%.log"') do @(
   set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
 if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
-  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][0-9][0-9]* error[^.][DRCLU][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
+  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][C0-9][0-9]* error[^.][DRCLU][C0-9][0-9]*" "build%OSR_EXT%.log"') do @(
     @echo %%x
   )
 )

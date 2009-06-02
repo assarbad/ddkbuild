@@ -666,24 +666,24 @@ if not "%errorlevel%" == "0" set OSR_ERRCODE=%errorlevel%
 :: Assume that the onscreen errors are complete!
 setlocal
 set WARNING_FILE_COUNT=0
-if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][C0-9][0-9]* error[^.][DRCLU][C0-9][0-9]*" "build%OSR_EXT%.log"') do @(
+if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
   set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
 if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
-  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][DRCLU][C0-9][0-9]* error[^.][DRCLU][C0-9][0-9]*" "build%OSR_EXT%.log"') do @(
+  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
     @echo %%x
   )
 )
 set WARNING_FILE_COUNT_PRE=0
-if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
+if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do @(
   set /a WARNING_FILE_COUNT_PRE=%WARNING_FILE_COUNT_PRE%+1
 )
 :: Reset if this is no PREfast build
 if "%prefast_build%" == "0" set WARNING_FILE_COUNT_PRE=0
 if not "%WARNING_FILE_COUNT_PRE%" == "0" (
   %OSR_ECHO% =============== PREfast warnings ======================
-  if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CLU]*" "prefast%OSR_EXT%.log"') do @(
+  if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do @(
     @echo %%x
   )
 )

@@ -149,6 +149,7 @@ set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
 set OSR_ECHO=@echo DDKBLD:
+set OSR_RANDEXT=%RANDOM%%RANDOM%
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set error messages
@@ -571,11 +572,11 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
 @if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
   %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
-  call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"') do @(
+  call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
-  if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%.tmp"
+  if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
   %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
@@ -715,11 +716,11 @@ popd
 @if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
   %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
-  call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"') do @(
+  call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
-  if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%.tmp"
+  if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
   %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
@@ -749,11 +750,11 @@ call :CheckTargets "%~f1"
 @if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
   %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
   pushd "%~f1"
-  call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"') do @(
+  call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
     %OSR_ECHO% %%x
   )
-  if exist "%TEMP%\%OSR_SETENV_SCRIPT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%.tmp"
+  if exist "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
   %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )

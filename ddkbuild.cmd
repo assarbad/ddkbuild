@@ -164,7 +164,7 @@ set ERR_NoBASEDIR=NT4BASE, W2KBASE, WXPBASE and/or WNETBASE environment variable
 :: Possible codes: 5
 set ERR_BadMode=^<build type^> must be 'checked', 'free', 'chk' or 'fre' (case-insensitive).
 :: Possible codes: 6
-set ERR_NoTarget=Target directory must contain a SOURCES or DIRS file.
+set ERR_NoTarget=Target directory must have a SOURCES+MAKEFILE or DIRS file.
 :: Possible codes: 7, 8
 set ERR_NoDir=The ^<directory^> parameter must be a valid directory.
 :: Possible codes: 9
@@ -740,7 +740,7 @@ call :CheckTargets "%~f1"
 @if not "%OSR_ERRCODE%" == "0" @(
   echo.
   %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
-  %OSR_ECHO% when trying to set a custom environment! Quitting.
+  %OSR_ECHO% when trying to set a custom environment! Quitting. ^(ERROR #%OSR_ERRCODE%^)
   set buildDirectory=%~f1
   if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
   call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret

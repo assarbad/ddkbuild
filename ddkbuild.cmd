@@ -1200,13 +1200,13 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       checked, chk     indicates a checked build
 @echo       free, fre        indicates a free build
 @echo.
-@echo Remaining parameters ("opt!" = optional parameter):
+@echo Remaining parameters (all optional):
 @echo       ^<directory^>      path to build directory, try . (current directory)
-@echo       [flags]    opt!  any flags you think should be passed to build (try /a
+@echo       [flags]          any flags you think should be passed to build (try /a
 @echo                        for clean)
-@echo       -WDF       opt!  performs a WDF build
-@echo       -PREFAST   opt!  performs a PREFAST build
-@echo       -CUV       opt!  uses the Call Usage Verifier, implies a PREFAST build
+@echo       -WDF             performs a WDF build
+@echo       -PREFAST         performs a PREFAST build
+@echo       -CUV             uses the Call Usage Verifier, implies a PREFAST build
 @echo.
 @echo Special files:
 @echo       The build target directory (where the DIRS or SOURCES file resides) can

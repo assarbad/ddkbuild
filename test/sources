@@ -1,0 +1,9 @@
+# $Id$
+TARGETNAME=testdrv
+TARGETPATH=obj
+TARGETTYPE=DRIVER
+
+# Additional defines for the C/C++ preprocessor
+C_DEFINES=$(C_DEFINES)
+
+SOURCES=testdrv.c

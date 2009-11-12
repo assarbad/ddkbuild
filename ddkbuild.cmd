@@ -1119,46 +1119,46 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
 @echo Values for ^<target^>:
-@echo    --------------------------------------------------------------------------
-@echo     Target platform and OS     ^| Miscellaneous
-@echo    ----------------------------^|---------------------------------------------
-@echo     Target      ^| Windows     ^| CPU     ^| Base directory ^| Target alias(es)
-@echo    -------------^|-------------^|---------^|----------------^|-------------------
-@echo     -NT4        ^| NT 4.0      ^| x86     ^| %%NT4BASE%%    ^|
-@echo     -W2K        ^| 2000        ^| x86     ^| %%W2KBASE%%    ^|
-@echo     -W2K64      ^| 2000        ^| Itanium ^| %%W2KBASE%%    ^| -W2KI64
-@echo     -WXP        ^| XP          ^| x86     ^| %%WXPBASE%%    ^| -XP
-@echo     -WXP64      ^| XP          ^| Itanium ^| %%WXPBASE%%    ^| -WXPI64, -XP64
-@echo     -WXP2K      ^| 2000        ^| x86     ^| %%WXPBASE%%    ^| -XPW2K
-@echo     -WNET       ^| 2003        ^| x86     ^| %%WNETBASE%%   ^|
-@echo     -WNET64     ^| 2003        ^| Itanium ^| %%WNETBASE%%   ^| -WNETI64
-@echo     -WNETXP     ^| XP          ^| x86     ^| %%WNETBASE%%   ^|
-@echo     -WNETXP64   ^| XP          ^| Itanium ^| %%WNETBASE%%   ^|
-@echo     -WNETAMD64  ^| 2003/XP x64 ^| x64     ^| %%WNETBASE%%   ^| -WNETX64, -WNETA64
-@echo     -WNET2K     ^| 2000 SP3    ^| x86     ^| %%WNETBASE%%   ^| -WNETW2K
-@echo     -WLH        ^| Vista/2008  ^| x86     ^| %%WLHBASE%%    ^|
-@echo     -WLH2K      ^| 2000 SP4    ^| x86     ^| %%WLHBASE%%    ^|
-@echo     -WLHXP      ^| XP          ^| x86     ^| %%WLHBASE%%    ^|
-@echo     -WLHXP64    ^| XP          ^| Itanium ^| %%WLHBASE%%    ^|
-@echo     -WLHNET     ^| 2003        ^| x86     ^| %%WLHBASE%%    ^|
-@echo     -WLHNETI64  ^| 2003        ^| Itanium ^| %%WLHBASE%%    ^| -WLHNET64
-@echo     -WLHNETX64  ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%    ^| -WLHNETA64
-@echo     -WLHI64     ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%    ^| -WLH64
-@echo     -WLHX64     ^| Vista/2008  ^| x64     ^| %%WLHBASE%%    ^| -WLHA64
-@echo     -WIN7       ^| 7/2008 R2   ^| x86     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7I64    ^| 7/2008 R2   ^| Itanium ^| %%WIN7BASE%%   ^|
-@echo     -WIN7X64    ^| 7/2008 R2   ^| x64     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7LH     ^| Vista/2008  ^| x86     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7LHI64  ^| Vista/2008  ^| Itanium ^| %%WIN7BASE%%   ^|
-@echo     -WIN7LHX64  ^| Vista/2008  ^| x64     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7NET    ^| 2003        ^| x86     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7NETI64 ^| 2003        ^| Itanium ^| %%WIN7BASE%%   ^|
-@echo     -WIN7NETX64 ^| 2003/XP x64 ^| x64     ^| %%WIN7BASE%%   ^|
-@echo     -WIN7XP     ^| XP          ^| x86     ^| %%WIN7BASE%%   ^|
-@echo    --------------------------------------------------------------------------
+@echo    ---------------------------------------------------------------------------
+@echo     Target platform, OS and architecture^| Miscellaneous
+@echo    -------------------------------------^|-------------------------------------
+@echo     ^<target^>    ^| Windows     ^| CPU     ^| Base directory ^| ^<target^> alias(es)
+@echo    -------------^|-------------^|---------^|----------------^|--------------------
+@echo     -NT4        ^| NT 4.0      ^| x86     ^| %%NT4BASE%%      ^|
+@echo     -W2K        ^| 2000        ^| x86     ^| %%W2KBASE%%      ^|
+@echo     -W2K64      ^| 2000        ^| Itanium ^| %%W2KBASE%%      ^| -W2KI64
+@echo     -WXP        ^| XP          ^| x86     ^| %%WXPBASE%%      ^| -XP
+@echo     -WXP64      ^| XP          ^| Itanium ^| %%WXPBASE%%      ^| -WXPI64, -XP64
+@echo     -WXP2K      ^| 2000        ^| x86     ^| %%WXPBASE%%      ^| -XPW2K
+@echo     -WNET       ^| 2003        ^| x86     ^| %%WNETBASE%%     ^|
+@echo     -WNET64     ^| 2003        ^| Itanium ^| %%WNETBASE%%     ^| -WNETI64
+@echo     -WNETXP     ^| XP          ^| x86     ^| %%WNETBASE%%     ^|
+@echo     -WNETXP64   ^| XP          ^| Itanium ^| %%WNETBASE%%     ^|
+@echo     -WNETAMD64  ^| 2003/XP x64 ^| x64     ^| %%WNETBASE%%     ^| -WNETX64, -WNETA64
+@echo     -WNET2K     ^| 2000 SP3    ^| x86     ^| %%WNETBASE%%     ^| -WNETW2K
+@echo     -WLH        ^| Vista/2008  ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLH2K      ^| 2000 SP4    ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHXP      ^| XP          ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHXP64    ^| XP          ^| Itanium ^| %%WLHBASE%%      ^|
+@echo     -WLHNET     ^| 2003        ^| x86     ^| %%WLHBASE%%      ^|
+@echo     -WLHNETI64  ^| 2003        ^| Itanium ^| %%WLHBASE%%      ^| -WLHNET64
+@echo     -WLHNETX64  ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%      ^| -WLHNETA64
+@echo     -WLHI64     ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%      ^| -WLH64
+@echo     -WLHX64     ^| Vista/2008  ^| x64     ^| %%WLHBASE%%      ^| -WLHA64
+@echo     -WIN7       ^| 7/2008 R2   ^| x86     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7I64    ^| 7/2008 R2   ^| Itanium ^| %%WIN7BASE%%     ^|
+@echo     -WIN7X64    ^| 7/2008 R2   ^| x64     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7LH     ^| Vista/2008  ^| x86     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7LHI64  ^| Vista/2008  ^| Itanium ^| %%WIN7BASE%%     ^|
+@echo     -WIN7LHX64  ^| Vista/2008  ^| x64     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7NET    ^| 2003        ^| x86     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7NETI64 ^| 2003        ^| Itanium ^| %%WIN7BASE%%     ^|
+@echo     -WIN7NETX64 ^| 2003/XP x64 ^| x64     ^| %%WIN7BASE%%     ^|
+@echo     -WIN7XP     ^| XP          ^| x86     ^| %%WIN7BASE%%     ^|
+@echo    ---------------------------------------------------------------------------
 @echo     Support for NT4 and W2K DDKs is deprecated and not checked anymore
 @echo     in new versions. It may or may not work properly.
-@echo    --------------------------------------------------------------------------
+@echo    ---------------------------------------------------------------------------
 @echo.
 @echo Values for ^<build type^>:
 @echo       checked, chk     indicates a checked build

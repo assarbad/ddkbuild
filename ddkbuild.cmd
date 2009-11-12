@@ -1,5 +1,5 @@
 @echo off
-@set VERSION=V7.3
+@set VERSION=V7.4
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -243,6 +243,9 @@ goto :CommonBuild
 :: modes supported by another flavor of DDKBUILD.
 :WIN764Check
 :WIN7A64Check
+:WIN7WLHCheck
+:WIN7WLH64Check
+:WIN7WLHA64Check
 :WIN7NET64Check
 :WIN7NETA64Check
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -404,8 +407,10 @@ goto :EOF
 :: 3790.1830   - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K] [no_prefast] [bscmake]"
 :: 6000        - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
 :: 6001.18000  - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-:: 7600.16385.0- "setenv <directory> [fre|chk] [64|x64] [WIN7|WLH|WXP|WNET] [bscmake] [no_oacr] [separate_object_root]"
-::
+:: 6001.18001 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 6001.18002 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 7600.16385 - "setenv <directory> [fre|chk] [64|x64] [WIN7|WLH|WXP|WNET] [bscmake] [no_oacr] [separate_object_root]"
+
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: NT 4.0 build using NT4 DDK
 :NT4Build
@@ -420,7 +425,7 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\w2k\set2k.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: W2K build for 64bit (Intel) using W2K DDK
+:: W2K build for 64bit (Itanium) using W2K DDK
 :W2K64Build
 :W2KI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv64.bat" %%BASEDIR%% %%BuildMode%%
@@ -433,7 +438,7 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WXP build for 64bit (Intel) using WXP DDK
+:: WXP build for 64bit (Itanium) using WXP DDK
 :XP64Build
 :WXP64Build
 :WXPI64Build
@@ -467,14 +472,14 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (Intel) using WNET DDK
+:: WNET build for 64bit (Itanium) using WNET DDK
 :WNET64Build
 :WNETI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (AMD) using WNET DDK
+:: WNET build for 64bit (x64) using WNET DDK
 :WNETA64Build
 :WNETAMD64Build
 :WNETX64Build
@@ -488,13 +493,13 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 32bit using WLH DDK
+:: WLH build for 32bit using WLH WDK
 :WLHBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (AMD) using WLH DDK
+:: WLH build for 64bit (x64) using WLH WDK
 :WLHA64Build
 :WLHX64Build
 call :DetectVistaWDK
@@ -502,14 +507,14 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD6
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (Intel) using WLH DDK
+:: WLH build for 64bit (Itanium) using WLH WDK
 :WLH64Build
 :WLHI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (AMD) using WLH DDK
+:: WNET build for 64bit (x64) using WLH WDK
 :WLHNETA64Build
 :WLHNETX64Build
 call :DetectVistaWDK
@@ -517,32 +522,32 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% %OSR_AMD6
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (Intel) using WLH DDK
+:: WNET build for 64bit (Itanium) using WLH WDK
 :WLHNET64Build
 :WLHNETI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WXP build for 32bit using WLH DDK
+:: WXP build for 32bit using WLH WDK
 :WLHXPBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WXP build for 64bit (Intel) using WLH DDK
+:: WXP build for 64bit (Itanium) using WLH WDK
 :WLHXP64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% 64 WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: W2K build for 32bit using WLH DDK
+:: W2K build for 32bit using WLH WDK
 :WLH2KBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% W2K
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 32bit using WLH DDK
+:: WNET build for 32bit using WLH WDK
 :WLHNETBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WNET
 goto :EOF
@@ -554,13 +559,13 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WIN7 build for 64bit (AMD) using WIN7 DDK
+:: WIN7 build for 64bit (x64) using WIN7 DDK
 :WIN7X64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WIN7 build for 64bit (Intel) using WIN7 DDK
+:: WIN7 build for 64bit (Itanium) using WIN7 DDK
 :WIN7I64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WIN7 no_oacr
 goto :EOF
@@ -572,13 +577,13 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (AMD) using WIN7 DDK
+:: WLH build for 64bit (x64) using WIN7 DDK
 :WIN7LHX64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (Intel) using WIN7 DDK
+:: WLH build for 64bit (Itanium) using WIN7 DDK
 :WIN7LHI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WLH no_oacr
 goto :EOF
@@ -590,13 +595,13 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (AMD) using WIN7 DDK
+:: WNET build for 64bit (x64) using WIN7 DDK
 :WIN7NETX64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (Intel) using WIN7 DDK
+:: WNET build for 64bit (Itanium) using WIN7 DDK
 :WIN7NETI64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WNET no_oacr
 goto :EOF
@@ -1114,9 +1119,9 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
 @echo Values for ^<target^>:
-@echo    ------------------------------------------------------------------------------
+@echo    --------------------------------------------------------------------------
 @echo     Target platform and OS     ^| Miscellaneous
-@echo    ----------------------------^|------------------------------------------------
+@echo    ----------------------------^|---------------------------------------------
 @echo     Target      ^| Windows     ^| CPU     ^| Base directory ^| Target alias(es)
 @echo    -------------^|-------------^|---------^|----------------^|-------------------
 @echo     -NT4        ^| NT 4.0      ^| x86     ^| %%NT4BASE%%    ^|
@@ -1150,10 +1155,10 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo     -WIN7NETI64 ^| 2003        ^| Itanium ^| %%WIN7BASE%%   ^|
 @echo     -WIN7NETX64 ^| 2003/XP x64 ^| x64     ^| %%WIN7BASE%%   ^|
 @echo     -WIN7XP     ^| XP          ^| x86     ^| %%WIN7BASE%%   ^|
-@echo    ------------------------------------------------------------------------------
+@echo    --------------------------------------------------------------------------
 @echo     Support for NT4 and W2K DDKs is deprecated and not checked anymore
 @echo     in new versions. It may or may not work properly.
-@echo    ------------------------------------------------------------------------------
+@echo    --------------------------------------------------------------------------
 @echo.
 @echo Values for ^<build type^>:
 @echo       checked, chk     indicates a checked build

@@ -1152,11 +1152,11 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 @echo USAGE:
 @echo ======
-@echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
+@echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST] [-CUV]
 @echo.
 @echo Values for ^<target^>:
 @echo    ---------------------------------------------------------------------------
-@echo     Target platform, OS and architecture^| Miscellaneous
+@echo     Target OS version and architecture  ^| Miscellaneous
 @echo    -------------------------------------^|-------------------------------------
 @echo     ^<target^>    ^| Windows     ^| CPU     ^| Base directory ^| ^<target^> alias(es)
 @echo    -------------^|-------------^|---------^|----------------^|--------------------

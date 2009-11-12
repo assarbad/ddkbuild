@@ -126,6 +126,10 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::      in VS is in Unicode by default. This garbles the output from DDKBUILD
 ::      and we therefore clear the environment variable VS_UNICODE_OUTPUT.
 ::
+::      To modify the default behavior of this script with the newest WDKs,
+::      set the variable SETTING_OACR in the ddkbldenv.cmd hook script to turn
+::      OACR back on (NB: no OACR tools exist for Itanium in the WDK).
+::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -268,6 +272,8 @@ goto :CommonBuild
 :W7XPCheck
 set BASEDIROS=Windows 7/Windows 2008 Server R2
 set BASEDIRVAR=W7BASE
+:: The default for OACR is off
+if not DEFINED SETTING_OACR set SETTING_OACR=no_oacr
 :: Other flavor of DDKBUILD
 if not DEFINED W7BASE if DEFINED WIN7BASE set BASEDIRVAR=WIN7BASE
 :: Compatibility between BUILD and VS ... prevent pipes from being used
@@ -565,14 +571,14 @@ goto :EOF
 :: W7 build for 32bit using W7/2008 WDK
 :W7Build
 :WIN7Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7 %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W7 build for 64bit (x64) using W7/2008 WDK
 :W7X64Build
 :WIN7A64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7 %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -586,14 +592,14 @@ goto :EOF
 :: WLH build for 32bit using W7/2008 WDK
 :W7LHBuild
 :WIN7WLHBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (x64) using W7/2008 WDK
 :W7LHX64Build
 :WIN7WLHA64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -607,14 +613,14 @@ goto :EOF
 :: WNET build for 32bit using W7/2008 WDK
 :W7NETBuild
 :WIN7NETBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (x64) using W7/2008 WDK
 :W7NETX64Build
 :WIN7NETA64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -628,7 +634,7 @@ goto :EOF
 :: WXP build for 32bit using W7/2008 WDK
 :W7XPBuild
 :WIN7XPBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP %SETTING_OACR%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

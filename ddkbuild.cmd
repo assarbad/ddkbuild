@@ -61,6 +61,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::        %WXPBASE%  - Set this up for "-WXP*" builds
 ::        %WNETBASE% - Set this up for "-WNET*" builds
 ::        %WLHBASE%  - Set this up for "-WLH*" builds
+::        %WIN7BASE% - Set this up for "-WIN7*" builds
 ::        %WDF_ROOT% - Must be set if attempting to do a WDF Build.
 ::
 ::      Examples:
@@ -240,6 +241,35 @@ goto :CommonBuild
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: These labels are for compatibility with the respective
 :: modes supported by another flavor of DDKBUILD.
+:WIN764Check
+:WIN7A64Check
+:WIN7NET64Check
+:WIN7NETA64Check
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:WIN7Check
+:WIN7X64Check
+:WIN7I64Check
+:WIN7NETX64Check
+:WIN7NETI64Check
+:WIN7XPCheck
+:WIN7NETCheck
+:WIN7LH
+:WIN7LHI64
+:WIN7LHX64
+set BASEDIROS=Windows 7/Windows 2008 Server R2
+set BASEDIRVAR=WIN7BASE
+:: Compatibility between BUILD and VS ... prevent pipes from being used
+%OSR_ECHO% Clearing %%VS_UNICODE_OUTPUT%% ...
+set VS_UNICODE_OUTPUT=
+:: Return to caller if the BASEDIR is already defined (either customized or global)
+if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
+call :DetectBaseDirTemp "7600.16385.0"
+if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
+goto :CommonCheckErrorNotSupportedWithReturn
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: These labels are for compatibility with the respective
+:: modes supported by another flavor of DDKBUILD.
 :WLH64Check
 :WLHA64Check
 :WLHXP64Check
@@ -368,13 +398,14 @@ goto :EOF
 :: 
 :: Valid parameters for setenv in different DDKs/WDKs:
 ::
-:: 2600       - "setenv <directory> [fre|chk] [64] [hal]"
-:: 2600.1106  - "setenv <directory> [fre|chk] [64] [hal] [WXP|W2K]"
-:: 3790       - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K]"
-:: 3790.1830  - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K] [no_prefast] [bscmake]"
-:: 6000       - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-:: 6001.18000 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-
+:: 2600        - "setenv <directory> [fre|chk] [64] [hal]"
+:: 2600.1106   - "setenv <directory> [fre|chk] [64] [hal] [WXP|W2K]"
+:: 3790        - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K]"
+:: 3790.1830   - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K] [no_prefast] [bscmake]"
+:: 6000        - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 6001.18000  - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 7600.16385.0- "setenv <directory> [fre|chk] [64|x64] [WIN7|WLH|WXP|WNET] [bscmake] [no_oacr] [separate_object_root]"
+::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: NT 4.0 build using NT4 DDK
 :NT4Build
@@ -514,6 +545,66 @@ goto :EOF
 :: WNET build for 32bit using WLH DDK
 :WLHNETBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WNET
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WIN7 build for 32bit using WIN7 DDK
+:WIN7Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WIN7 build for 64bit (AMD) using WIN7 DDK
+:WIN7X64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WIN7 build for 64bit (Intel) using WIN7 DDK
+:WIN7I64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WIN7 no_oacr
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WLH build for 32bit using WIN7 DDK
+:WIN7LHBuild
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WLH build for 64bit (AMD) using WIN7 DDK
+:WIN7LHX64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WLH build for 64bit (Intel) using WIN7 DDK
+:WIN7LHI64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WLH no_oacr
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WNET build for 32bit using WIN7 DDK
+:WIN7NETBuild
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WNET build for 64bit (AMD) using WIN7 DDK
+:WIN7NETX64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WNET build for 64bit (Intel) using WIN7 DDK
+:WIN7NETI64Build
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WNET no_oacr
+goto :EOF
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: WXP build for 32bit using WIN7 DDK
+:WIN7XPBuild
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1023,36 +1114,46 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST]
 @echo.
 @echo Values for ^<target^>:
-@echo    --------------------------------------------------------------------------
-@echo     Target platform and OS   ^| Miscellaneous
-@echo    --------------------------^|-----------------------------------------------
-@echo     Target     ^| Windows     ^| CPU     ^| Base directory ^| Target alias(es)
-@echo    ------------^|-------------^|---------^|----------------^|--------------------
-@echo     -W2K       ^| 2000        ^| x86     ^| %%W2KBASE%%      ^|
-@echo     -W2K64     ^| 2000        ^| Itanium ^| %%W2KBASE%%      ^| -W2KI64
-@echo     -WXP       ^| XP          ^| x86     ^| %%WXPBASE%%      ^| -XP
-@echo     -WXP64     ^| XP          ^| Itanium ^| %%WXPBASE%%      ^| -WXPI64, -XP64
-@echo     -WXP2K     ^| 2000        ^| x86     ^| %%WXPBASE%%      ^| -XPW2K
-@echo     -WNET      ^| 2003        ^| x86     ^| %%WNETBASE%%     ^|
-@echo     -WNET64    ^| 2003        ^| Itanium ^| %%WNETBASE%%     ^| -WNETI64
-@echo     -WNETXP    ^| XP          ^| x86     ^| %%WNETBASE%%     ^|
-@echo     -WNETXP64  ^| XP          ^| Itanium ^| %%WNETBASE%%     ^|
-@echo     -WNETAMD64 ^| 2003/XP x64 ^| x64     ^| %%WNETBASE%%     ^| -WNETX64, -WNETA64
-@echo     -WNET2K    ^| 2000 SP3    ^| x86     ^| %%WNETBASE%%     ^| -WNETW2K
-@echo     -WLH       ^| Vista/2008  ^| x86     ^| %%WLHBASE%%      ^|
-@echo     -WLH2K     ^| 2000 SP4    ^| x86     ^| %%WLHBASE%%      ^|
-@echo     -WLHXP     ^| XP          ^| x86     ^| %%WLHBASE%%      ^|
-@echo     -WLHXP64   ^| XP          ^| Itanium ^| %%WLHBASE%%      ^|
-@echo     -WLHNET    ^| 2003        ^| x86     ^| %%WLHBASE%%      ^|
-@echo     -WLHNETI64 ^| 2003        ^| Itanium ^| %%WLHBASE%%      ^| -WLHNET64
-@echo     -WLHNETX64 ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%      ^| -WLHNETA64
-@echo     -WLHI64    ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%      ^| -WLH64
-@echo     -WLHX64    ^| Vista/2008  ^| x64     ^| %%WLHBASE%%      ^| -WLHA64
-@echo     -NT4       ^| NT 4.0      ^| x86     ^| %%NT4BASE%%      ^|
-@echo    --------------------------------------------------------------------------
+@echo    ------------------------------------------------------------------------------
+@echo     Target platform and OS     ^| Miscellaneous
+@echo    ----------------------------^|------------------------------------------------
+@echo     Target      ^| Windows     ^| CPU     ^| Base directory ^| Target alias(es)
+@echo    -------------^|-------------^|---------^|----------------^|-------------------
+@echo     -NT4        ^| NT 4.0      ^| x86     ^| %%NT4BASE%%    ^|
+@echo     -W2K        ^| 2000        ^| x86     ^| %%W2KBASE%%    ^|
+@echo     -W2K64      ^| 2000        ^| Itanium ^| %%W2KBASE%%    ^| -W2KI64
+@echo     -WXP        ^| XP          ^| x86     ^| %%WXPBASE%%    ^| -XP
+@echo     -WXP64      ^| XP          ^| Itanium ^| %%WXPBASE%%    ^| -WXPI64, -XP64
+@echo     -WXP2K      ^| 2000        ^| x86     ^| %%WXPBASE%%    ^| -XPW2K
+@echo     -WNET       ^| 2003        ^| x86     ^| %%WNETBASE%%   ^|
+@echo     -WNET64     ^| 2003        ^| Itanium ^| %%WNETBASE%%   ^| -WNETI64
+@echo     -WNETXP     ^| XP          ^| x86     ^| %%WNETBASE%%   ^|
+@echo     -WNETXP64   ^| XP          ^| Itanium ^| %%WNETBASE%%   ^|
+@echo     -WNETAMD64  ^| 2003/XP x64 ^| x64     ^| %%WNETBASE%%   ^| -WNETX64, -WNETA64
+@echo     -WNET2K     ^| 2000 SP3    ^| x86     ^| %%WNETBASE%%   ^| -WNETW2K
+@echo     -WLH        ^| Vista/2008  ^| x86     ^| %%WLHBASE%%    ^|
+@echo     -WLH2K      ^| 2000 SP4    ^| x86     ^| %%WLHBASE%%    ^|
+@echo     -WLHXP      ^| XP          ^| x86     ^| %%WLHBASE%%    ^|
+@echo     -WLHXP64    ^| XP          ^| Itanium ^| %%WLHBASE%%    ^|
+@echo     -WLHNET     ^| 2003        ^| x86     ^| %%WLHBASE%%    ^|
+@echo     -WLHNETI64  ^| 2003        ^| Itanium ^| %%WLHBASE%%    ^| -WLHNET64
+@echo     -WLHNETX64  ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%    ^| -WLHNETA64
+@echo     -WLHI64     ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%    ^| -WLH64
+@echo     -WLHX64     ^| Vista/2008  ^| x64     ^| %%WLHBASE%%    ^| -WLHA64
+@echo     -WIN7       ^| 7/2008 R2   ^| x86     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7I64    ^| 7/2008 R2   ^| Itanium ^| %%WIN7BASE%%   ^|
+@echo     -WIN7X64    ^| 7/2008 R2   ^| x64     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7LH     ^| Vista/2008  ^| x86     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7LHI64  ^| Vista/2008  ^| Itanium ^| %%WIN7BASE%%   ^|
+@echo     -WIN7LHX64  ^| Vista/2008  ^| x64     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7NET    ^| 2003        ^| x86     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7NETI64 ^| 2003        ^| Itanium ^| %%WIN7BASE%%   ^|
+@echo     -WIN7NETX64 ^| 2003/XP x64 ^| x64     ^| %%WIN7BASE%%   ^|
+@echo     -WIN7XP     ^| XP          ^| x86     ^| %%WIN7BASE%%   ^|
+@echo    ------------------------------------------------------------------------------
 @echo     Support for NT4 and W2K DDKs is deprecated and not checked anymore
 @echo     in new versions. It may or may not work properly.
-@echo    --------------------------------------------------------------------------
+@echo    ------------------------------------------------------------------------------
 @echo.
 @echo Values for ^<build type^>:
 @echo       checked, chk     indicates a checked build
@@ -1106,6 +1207,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       %%WXPBASE%%  - Set this up for ^"-WXP^", ^"-WXP64^", ^"-WXP2K^" builds
 @echo       %%WNETBASE%% - Set this up for ^"-WNET*^" builds
 @echo       %%WLHBASE%%  - Set this up for ^"-WLH*^" builds
+@echo       %%WIN7BASE%% - Set this up for ^"-WIN7*^" builds
 @echo.
 @echo       %%WDF_ROOT%% must be set if attempting to do a WDF Build previous to the
 @echo       Vista WDK (in later DDKs there is no need to set WDF_ROOT).

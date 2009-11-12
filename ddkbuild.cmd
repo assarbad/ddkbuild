@@ -272,8 +272,10 @@ goto :CommonBuild
 :W7XPCheck
 set BASEDIROS=Windows 7/Windows 2008 Server R2
 set BASEDIRVAR=W7BASE
-:: The default for OACR is off
+:: The default for OACR is off ("no_oacr" appended)
 if not DEFINED SETTING_OACR set SETTING_OACR=no_oacr
+:: The default for "separate_object_root" is to not pass it to setenv.bat
+if not DEFINED SETTING_SEP_OBJ_ROOT set SETTING_SEPARATE_OBJ_ROOT=
 :: Other flavor of DDKBUILD
 if not DEFINED W7BASE if DEFINED WIN7BASE set BASEDIRVAR=WIN7BASE
 :: Compatibility between BUILD and VS ... prevent pipes from being used
@@ -571,70 +573,70 @@ goto :EOF
 :: W7 build for 32bit using W7/2008 WDK
 :W7Build
 :WIN7Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7 %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7 %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W7 build for 64bit (x64) using W7/2008 WDK
 :W7X64Build
 :WIN7A64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7 %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7 %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: W7 build for 64bit (Itanium) using W7/2008 WDK
 :W7I64Build
 :WIN764Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WIN7 no_oacr
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WIN7 no_oacr %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 32bit using W7/2008 WDK
 :W7LHBuild
 :WIN7WLHBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (x64) using W7/2008 WDK
 :W7LHX64Build
 :WIN7WLHA64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WLH build for 64bit (Itanium) using W7/2008 WDK
 :W7LHI64Build
 :WIN7WLH64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WLH no_oacr
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WLH no_oacr %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 32bit using W7/2008 WDK
 :W7NETBuild
 :WIN7NETBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (x64) using W7/2008 WDK
 :W7NETX64Build
 :WIN7NETA64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WNET build for 64bit (Itanium) using W7/2008 WDK
 :W7NETI64Build
 :WIN7NET64Build
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WNET no_oacr
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WNET no_oacr %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: WXP build for 32bit using W7/2008 WDK
 :W7XPBuild
 :WIN7XPBuild
-set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP %SETTING_OACR%
+set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP %SETTING_OACR% %SETTING_SEPARATE_OBJ_ROOT%
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -182,7 +182,7 @@ set ERR_SetEnvFailed=The SETENV script failed.
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Clear the error code variable
 set OSR_ERRCODE=0
-set prefast_build=0
+set PREFAST_BUILD=0
 
 :: Turn on tracing, use %OSR_TRACE% instead of ECHO
 if /i "%OSR_DEBUG%" == "on" (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRACE=rem)
@@ -728,6 +728,7 @@ if "%3" == "" goto :DONE
 if "%3" == "/a" goto :RebuildallFound
 if /i "%3" == "-WDF" goto :WDFFound
 if /i "%3" == "-PREFAST" goto :PrefastFound
+if /i "%3" == "-CUV" goto :CallUsageVerifier
 set bscFlags=/n
 set bFlags=%bFlags% %3
 :: Remove next arg
@@ -739,6 +740,8 @@ shift
 :: Note, that the setwdf.bat is called from setenv.bat in the WDK,
 :: therefore we skip it.
 if /i "%BASEDIRVAR%" == "WLHBASE" goto :WDFOkay
+if /i "%BASEDIRVAR%" == "W7BASE" goto :WDFOkay
+if /i "%BASEDIRVAR%" == "WIN7BASE" goto :WDFOkay
 if "%WDF_ROOT%" == "" call :ShowErrorMsg 2 "%ERR_NoWdfRoot%" & goto :USAGE
 pushd .
 if exist "%WDF_ROOT%\set_wdf_env.cmd" call "%WDF_ROOT%\set_wdf_env.cmd"
@@ -748,7 +751,13 @@ goto :ContinueParsing
 
 :PrefastFound
 shift
-set prefast_build=1
+set PREFAST_BUILD=1
+goto :ContinueParsing
+
+:CallUsageVerifier
+shift
+set VERIFIER_DDK_EXTENSIONS=1
+set PREFAST_BUILD=1
 goto :ContinueParsing
 
 :RebuildallFound
@@ -764,7 +773,7 @@ for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR
   if exist "%%x"   del /f /q "%%x"
 )
 
-if not "%prefast_build%" == "0" goto :RunPrefastBuild
+if not "%PREFAST_BUILD%" == "0" goto :RunPrefastBuild
 %OSR_ECHO% Run build %mpFlag% %bFlags% for %BuildMode% version in %buildDirectory_raw%
 pushd .
 build %mpFlag% %bFlags%
@@ -802,7 +811,7 @@ if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][
   set /a WARNING_FILE_COUNT_PRE=%WARNING_FILE_COUNT_PRE%+1
 )
 :: Reset if this is no PREfast build
-if "%prefast_build%" == "0" set WARNING_FILE_COUNT_PRE=0
+if "%PREFAST_BUILD%" == "0" set WARNING_FILE_COUNT_PRE=0
 if not "%WARNING_FILE_COUNT_PRE%" == "0" (
   %OSR_ECHO% =============== PREfast warnings ======================
   if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do @(
@@ -1195,6 +1204,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo                        for clean)
 @echo       -WDF       opt!  performs a WDF build
 @echo       -PREFAST   opt!  performs a PREFAST build
+@echo       -CUV       opt!  uses the Call Usage Verifier, implies a PREFAST build
 @echo.
 @echo Special files:
 @echo       The build target directory (where the DIRS or SOURCES file resides) can

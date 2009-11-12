@@ -61,7 +61,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::        %WXPBASE%  - Set this up for "-WXP*" builds
 ::        %WNETBASE% - Set this up for "-WNET*" builds
 ::        %WLHBASE%  - Set this up for "-WLH*" builds
-::        %WIN7BASE% - Set this up for "-WIN7*" builds
+::        %W7BASE%   - Set this up for "-W7*" builds
 ::        %WDF_ROOT% - Must be set if attempting to do a WDF Build.
 ::
 ::      Examples:
@@ -69,6 +69,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::        W2KBASE : could be "D:\Nt50DDK"
 ::        WXPBASE : could be "D:\WINDDK\2600"
 ::        WNETBASE: could be "D:\WINDDK\3790.1830" or "C:\WINDDK\3790"
+::        W7BASE  : could be "C:\WINDDK\7600.16385.0"
 ::
 ::    COMMAND FORMAT:
 ::
@@ -77,16 +78,19 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::
 ::    RETURN CODES AND THEIR MEANING:
 ::
-::      001 == Unknown build type. Check the <platform> parameter
-::      002 == No WDF_ROOT given using WDF build type.
-::      003 == The DDK-specific base directory variable (NT4BASE, W2KBASE, WXPBASE,
-::             WNETBASE) is not set at all and could not be auto-detected!
-::      004 == BASEDIR variable is empty. Check to see that the DDK-specific
-::             variable is set correctly (i.e. NT4BASE, W2KBASE, WXPBASE, WNETBASE)
-::      005 == No mode (checked/free) was given. Check the respective parameter!
+::      001 == Unknown type of build. Please recheck parameters.
+::      002 == WDF_ROOT is not defined, are you using 00.01.5054 or later?
+::      003 == To build using type <target> you need to set the <basedir>
+::             environment variable to point to the <basediros> DDK base
+::             directory!
+::      004 == NT4BASE, W2KBASE, WXPBASE, WNETBASE and/or W7BASE environment
+::             variable(s) not set. Environment variable(s) must be set by user
+::             according to DDK version(s) installed.
+::      005 == <build type> must be 'checked', 'free', 'chk' or 'fre'
+::             (case-insensitive).
 ::      006 == No DIR or SOURCES file found in the given target directory.
-::      007 == No target directory given.
-::      008 == Given target directory does not exist.
+::      007 == Target directory must have a SOURCES+MAKEFILE or DIRS file.
+::      008 == The <directory> parameter must be a valid directory.
 ::      009 == The SETENV script failed.
 ::
 ::      Note: If %OSR_ERRCODE% and %ERRORLEVEL% are equal, the return code stems
@@ -161,7 +165,7 @@ set ERR_NoWdfRoot=WDF_ROOT is not defined, are you using 00.01.5054 or later?
 :: Possible codes: 3
 set ERR_BaseDirNotSet=To build using type %%OSR_TARGET%% you need to set the %%%%%%BASEDIRVAR%%%%%% environment variable to point to the %%BASEDIROS%% DDK base directory!
 :: Possible codes: 4
-set ERR_NoBASEDIR=NT4BASE, W2KBASE, WXPBASE and/or WNETBASE environment variable(s) not set. Environment variable(s) must be set by user according to DDK version(s) installed.
+set ERR_NoBASEDIR=NT4BASE, W2KBASE, WXPBASE, WNETBASE and/or W7BASE environment variable(s) not set. Environment variable(s) must be set by user according to DDK version(s) installed.
 :: Possible codes: 5
 set ERR_BadMode=^<build type^> must be 'checked', 'free', 'chk' or 'fre' (case-insensitive).
 :: Possible codes: 6
@@ -241,26 +245,31 @@ goto :CommonBuild
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: These labels are for compatibility with the respective
 :: modes supported by another flavor of DDKBUILD.
+:WIN7Check
 :WIN764Check
 :WIN7A64Check
 :WIN7WLHCheck
 :WIN7WLH64Check
 :WIN7WLHA64Check
+:WIN7NETCheck
 :WIN7NET64Check
 :WIN7NETA64Check
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:WIN7Check
-:WIN7X64Check
-:WIN7I64Check
-:WIN7NETX64Check
-:WIN7NETI64Check
 :WIN7XPCheck
-:WIN7NETCheck
-:WIN7LH
-:WIN7LHI64
-:WIN7LHX64
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:W7Check
+:W7I64Check
+:W7X64Check
+:W7LHCheck
+:W7LHI64Check
+:W7LHX64Check
+:W7NETCheck
+:W7NETI64Check
+:W7NETX64Check
+:W7XPCheck
 set BASEDIROS=Windows 7/Windows 2008 Server R2
-set BASEDIRVAR=WIN7BASE
+set BASEDIRVAR=W7BASE
+:: Other flavor of DDKBUILD
+if not DEFINED W7BASE if DEFINED WIN7BASE set BASEDIRVAR=WIN7BASE
 :: Compatibility between BUILD and VS ... prevent pipes from being used
 %OSR_ECHO% Clearing %%VS_UNICODE_OUTPUT%% ...
 set VS_UNICODE_OUTPUT=
@@ -294,7 +303,7 @@ set BASEDIRVAR=WLHBASE
 set VS_UNICODE_OUTPUT=
 :: Return to caller if the BASEDIR is already defined (either customized or global)
 if DEFINED %BASEDIRVAR% goto :CommonCheckNoErrorWithReturn
-call :DetectBaseDirTemp "6001.18000 6000"
+call :DetectBaseDirTemp "6001.18002 6001.18001 6001.18000 6000"
 if DEFINED BASEDIRTEMP if exist "%BASEDIRTEMP%" goto :CommonCheckSetVarWithReturn
 goto :CommonCheckErrorNotSupportedWithReturn
 
@@ -407,9 +416,9 @@ goto :EOF
 :: 3790.1830   - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WXP|WNET|W2K] [no_prefast] [bscmake]"
 :: 6000        - "setenv <directory> [fre|chk] [64|AMD64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
 :: 6001.18000  - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-:: 6001.18001 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-:: 6001.18002 - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
-:: 7600.16385 - "setenv <directory> [fre|chk] [64|x64] [WIN7|WLH|WXP|WNET] [bscmake] [no_oacr] [separate_object_root]"
+:: 6001.18001  - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 6001.18002  - "setenv <directory> [fre|chk] [64|x64] [hal] [WLH|WXP|WNET|W2K] [bscmake]"
+:: 7600.16385  - "setenv <directory> [fre|chk] [64|x64] [WIN7|WLH|WXP|WNET] [bscmake] [no_oacr] [separate_object_root]"
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: NT 4.0 build using NT4 DDK
@@ -553,61 +562,71 @@ set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WIN7 build for 32bit using WIN7 DDK
+:: W7 build for 32bit using W7/2008 WDK
+:W7Build
 :WIN7Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WIN7
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WIN7 build for 64bit (x64) using WIN7 DDK
-:WIN7X64Build
+:: W7 build for 64bit (x64) using W7/2008 WDK
+:W7X64Build
+:WIN7A64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WIN7
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WIN7 build for 64bit (Itanium) using WIN7 DDK
-:WIN7I64Build
+:: W7 build for 64bit (Itanium) using W7/2008 WDK
+:W7I64Build
+:WIN764Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WIN7 no_oacr
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 32bit using WIN7 DDK
-:WIN7LHBuild
+:: WLH build for 32bit using W7/2008 WDK
+:W7LHBuild
+:WIN7WLHBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (x64) using WIN7 DDK
-:WIN7LHX64Build
+:: WLH build for 64bit (x64) using W7/2008 WDK
+:W7LHX64Build
+:WIN7WLHA64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WLH
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WLH build for 64bit (Itanium) using WIN7 DDK
-:WIN7LHI64Build
+:: WLH build for 64bit (Itanium) using W7/2008 WDK
+:W7LHI64Build
+:WIN7WLH64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WLH no_oacr
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 32bit using WIN7 DDK
+:: WNET build for 32bit using W7/2008 WDK
+:W7NETBuild
 :WIN7NETBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (x64) using WIN7 DDK
-:WIN7NETX64Build
+:: WNET build for 64bit (x64) using W7/2008 WDK
+:W7NETX64Build
+:WIN7NETA64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x64 WNET
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WNET build for 64bit (Itanium) using WIN7 DDK
-:WIN7NETI64Build
+:: WNET build for 64bit (Itanium) using W7/2008 WDK
+:W7NETI64Build
+:WIN7NET64Build
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% ia64 WNET no_oacr
 goto :EOF
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: WXP build for 32bit using WIN7 DDK
+:: WXP build for 32bit using W7/2008 WDK
+:W7XPBuild
 :WIN7XPBuild
 set OSR_CMDLINE="%%BASEDIR%%\bin\setenv.bat" %%BASEDIR%% %%BuildMode%% x86 WXP
 goto :EOF
@@ -1145,16 +1164,16 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo     -WLHNETX64  ^| 2003/XP x64 ^| x64     ^| %%WLHBASE%%      ^| -WLHNETA64
 @echo     -WLHI64     ^| Vista/2008  ^| Itanium ^| %%WLHBASE%%      ^| -WLH64
 @echo     -WLHX64     ^| Vista/2008  ^| x64     ^| %%WLHBASE%%      ^| -WLHA64
-@echo     -WIN7       ^| 7/2008 R2   ^| x86     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7I64    ^| 7/2008 R2   ^| Itanium ^| %%WIN7BASE%%     ^|
-@echo     -WIN7X64    ^| 7/2008 R2   ^| x64     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7LH     ^| Vista/2008  ^| x86     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7LHI64  ^| Vista/2008  ^| Itanium ^| %%WIN7BASE%%     ^|
-@echo     -WIN7LHX64  ^| Vista/2008  ^| x64     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7NET    ^| 2003        ^| x86     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7NETI64 ^| 2003        ^| Itanium ^| %%WIN7BASE%%     ^|
-@echo     -WIN7NETX64 ^| 2003/XP x64 ^| x64     ^| %%WIN7BASE%%     ^|
-@echo     -WIN7XP     ^| XP          ^| x86     ^| %%WIN7BASE%%     ^|
+@echo     -W7         ^| 7/2008 R2   ^| x86     ^| %%W7BASE%%       ^| -WIN7
+@echo     -W7I64      ^| 7/2008 R2   ^| Itanium ^| %%W7BASE%%       ^| -WIN764
+@echo     -W7X64      ^| 7/2008 R2   ^| x64     ^| %%W7BASE%%       ^| -WIN7A64
+@echo     -W7LH       ^| Vista/2008  ^| x86     ^| %%W7BASE%%       ^| -WIN7WLH
+@echo     -W7LHI64    ^| Vista/2008  ^| Itanium ^| %%W7BASE%%       ^| -WIN7WLH64
+@echo     -W7LHX64    ^| Vista/2008  ^| x64     ^| %%W7BASE%%       ^| -WIN7WLHA64
+@echo     -W7NET      ^| 2003        ^| x86     ^| %%W7BASE%%       ^| -WIN7NET
+@echo     -W7NETI64   ^| 2003        ^| Itanium ^| %%W7BASE%%       ^| -WIN7NET64
+@echo     -W7NETX64   ^| 2003/XP x64 ^| x64     ^| %%W7BASE%%       ^| -WIN7NETA64
+@echo     -W7XP       ^| XP          ^| x86     ^| %%W7BASE%%       ^| -WIN7XP
 @echo    ---------------------------------------------------------------------------
 @echo     Support for NT4 and W2K DDKs is deprecated and not checked anymore
 @echo     in new versions. It may or may not work properly.
@@ -1212,7 +1231,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       %%WXPBASE%%  - Set this up for ^"-WXP^", ^"-WXP64^", ^"-WXP2K^" builds
 @echo       %%WNETBASE%% - Set this up for ^"-WNET*^" builds
 @echo       %%WLHBASE%%  - Set this up for ^"-WLH*^" builds
-@echo       %%WIN7BASE%% - Set this up for ^"-WIN7*^" builds
+@echo       %%W7BASE%%   - Set this up for ^"-W7*^" builds
 @echo.
 @echo       %%WDF_ROOT%% must be set if attempting to do a WDF Build previous to the
 @echo       Vista WDK (in later DDKs there is no need to set WDF_ROOT).

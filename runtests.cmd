@@ -18,7 +18,6 @@ rd /s /q "%TEMPDIRBASE%" > NUL 2>&1
 for %%i in (%DDK_BASEDIRS%) do @(
   call :UNSETVAR %%i
 )
-    set
 :: Calls the tests for each base directory variable
 for %%i in (%DDK_BASEDIRS%) do @(
   echo ================ %%i ================

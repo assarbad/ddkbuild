@@ -1,4 +1,9 @@
 @echo off
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::
+::    $Id$
+::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set DDK_DIRBASE=C:\WINDDK
 set DDK_CONFIGS=checked chk free fre
 set ADDITIONAL_PARAMS=-cZ
@@ -6,7 +11,7 @@ set TEMPDIRBASE=.\loctmp
 set DDKBUILD_CMD=ddkbuild.cmd
 set TESTSOURCES=.\testsrc\*
 
-rd /s /q "%TEMPDIRBASE%"
+rd /s /q "%TEMPDIRBASE%" > NUL 2>&1
 :: Calls the tests for each base directory variable
 for %%i in (WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE) do @(
   call :SET_TESTCASES %%i
@@ -50,20 +55,21 @@ set TEST_TARGETS=%~2
 set TEST_DIRS=%~3
 for %%j in (%TEST_DIRS%) do @(
   for %%k in (%TEST_TARGETS%) do @(
+    echo %%k -^> %%j for each of: %DDK_CONFIGS%
     for %%l in (%DDK_CONFIGS%) do @(
-      call :RUN_ONE_TEST "%BASEDIRVAR%" "%DDK_DIRBASE%\%%j" "%%k" "%%l"
+      call :RUN_ONE_TEST "%BASEDIRVAR%" "%DDK_DIRBASE%\%%j" "%%k" "%%l" "%%j"
     )
   )
 )
 endlocal & goto :EOF
 
 :: Calls an actual build with the properly assembled parameters
-:: RUN_ONE_TEST <%BASEDIRVAR%> <DDKDIR> <TARGET> <CONFIG>
+:: RUN_ONE_TEST <%BASEDIRVAR%> <DDKDIR> <TARGET> <CONFIG> <DDKDIRBASE>
 :RUN_ONE_TEST
 setlocal ENABLEEXTENSIONS
 :: Set base directory for the DDK
 set %~1=%~2
-set TEMPDIR=%TEMPDIRBASE%\%~1_%~3
+set TEMPDIR=%TEMPDIRBASE%\%~1_%~3-%~5
 :: Create and fill temporary directory with local DDKBUILD and the sources to compile
 md "%TEMPDIR%" > NUL 2>&1
 xcopy /y ".\%DDKBUILD_CMD%" "%TEMPDIR%\" > NUL 2>&1
@@ -71,11 +77,9 @@ xcopy /y "%TESTSOURCES%" "%TEMPDIR%\" > NUL 2>&1
 :: Switch to the folder, call local DDKBUILD copy, switch back
 pushd "%TEMPDIR%" > NUL 2>&1
 set ERRORLEVEL=0
-call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > "%TEMPDIRBASE%\%~1_%~3_%~4.log" 2>&1
-if "%ERRORLEVEL%" == "0" @(
-  echo SUCCESS: %~1=%~2 for %~3 %~4
-) else @(
-  echo ERROR: %~1=%~2 for %~3 %~4 in %TEMPDIR%
+call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > %~1_%~3_%~4.log 2>&1
+if not "%ERRORLEVEL%" == "0" @(
+  echo ERROR(%ERRORLEVEL%): %~1=%~2 for %~3 %~4 in %TEMPDIR%
 )
 popd > NUL 2>&1
 endlocal & goto :EOF

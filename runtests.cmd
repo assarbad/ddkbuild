@@ -3,6 +3,7 @@ set DDK_DIRBASE=C:\WINDDK
 set DDK_CONFIGS=checked chk free fre
 set ADDITIONAL_PARAMS=-cZ
 set TEMPDIRBASE=.\loctmp
+set DDKBUILD_CMD=ddkbuild.cmd
 
 :: Calls the tests for each base directory variable
 for %%i in (WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE) do @(
@@ -64,7 +65,8 @@ set TEMPDIR=%TEMPDIRBASE%\%~1_%~3
 ::set TEST_TARGET=%~3
 ::set TEST_CONFIG=%~4
 md "%TEMPDIR%" > NUL 2>&1
+xcopy /y ".\%DDKBUILD_CMD%" "%TEMPDIR%\"
 pushd "%TEMPDIR%" > NUL 2>&1
-echo call .\ddkbuild.cmd -%~3 %~4 . %ADDITIONAL_PARAMS%
+echo call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS%
 popd > NUL 2>&1
 endlocal & goto :EOF

@@ -4,6 +4,7 @@ set DDK_CONFIGS=checked chk free fre
 set ADDITIONAL_PARAMS=-cZ
 set TEMPDIRBASE=.\loctmp
 set DDKBUILD_CMD=ddkbuild.cmd
+set TESTSOURCES=.\testsrc\*
 
 :: Calls the tests for each base directory variable
 for %%i in (WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE) do @(
@@ -62,11 +63,17 @@ setlocal ENABLEEXTENSIONS
 :: Set base directory for the DDK
 set %~1=%~2
 set TEMPDIR=%TEMPDIRBASE%\%~1_%~3
-::set TEST_TARGET=%~3
-::set TEST_CONFIG=%~4
+:: Create and fill temporary directory with local DDKBUILD and the sources to compile
 md "%TEMPDIR%" > NUL 2>&1
-xcopy /y ".\%DDKBUILD_CMD%" "%TEMPDIR%\"
+xcopy /y ".\%DDKBUILD_CMD%" "%TEMPDIR%\" > NUL 2>&1
+xcopy /y "%TESTSOURCES%" "%TEMPDIR%\" > NUL 2>&1
+:: Switch to the folder, call local DDKBUILD copy, switch back
 pushd "%TEMPDIR%" > NUL 2>&1
-echo call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS%
+echo call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > NUL 2>&1
+if not (%ERRORLEVEL%) == (0) @(
+  echo SUCCESS: %~1=%~2 for %~3
+) else @(
+  echo ERROR: %~1=%~2 for %~3
+)
 popd > NUL 2>&1
 endlocal & goto :EOF

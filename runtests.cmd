@@ -6,6 +6,7 @@ set TEMPDIRBASE=.\loctmp
 set DDKBUILD_CMD=ddkbuild.cmd
 set TESTSOURCES=.\testsrc\*
 
+rd /s /q "%TEMPDIRBASE%"
 :: Calls the tests for each base directory variable
 for %%i in (WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE) do @(
   call :SET_TESTCASES %%i
@@ -69,11 +70,14 @@ xcopy /y ".\%DDKBUILD_CMD%" "%TEMPDIR%\" > NUL 2>&1
 xcopy /y "%TESTSOURCES%" "%TEMPDIR%\" > NUL 2>&1
 :: Switch to the folder, call local DDKBUILD copy, switch back
 pushd "%TEMPDIR%" > NUL 2>&1
-echo call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > NUL 2>&1
-if not (%ERRORLEVEL%) == (0) @(
+set ERRORLEVEL=0
+call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS%
+echo ERRORLEVEL=%ERRORLEVEL%
+:: > NUL 2>&1
+if "%ERRORLEVEL%" == "0" @(
   echo SUCCESS: %~1=%~2 for %~3
 ) else @(
-  echo ERROR: %~1=%~2 for %~3
+  echo ERROR: %~1=%~2 for %~3 in %TEMPDIR%
 )
 popd > NUL 2>&1
 endlocal & goto :EOF

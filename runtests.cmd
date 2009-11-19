@@ -22,8 +22,8 @@ for %%i in (%DDK_BASEDIRS%) do @(
 :: Calls the tests for each base directory variable
 for %%i in (%DDK_BASEDIRS%) do @(
   echo ================ %%i ================
+  call :SET_TESTCASES %%i
 )
-::  call :SET_TESTCASES %%i
 :: We're done here, below are subroutines only
 endlocal & goto :EOF
 

@@ -4,7 +4,9 @@
 ::    $Id$
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+setlocal ENABLEEXTENSIONS
 set DDK_DIRBASE=C:\WINDDK
+set DDK_BASEDIRS=WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE
 set DDK_CONFIGS=checked chk free fre
 set ADDITIONAL_PARAMS=-cZ
 set TEMPDIRBASE=.\loctmp
@@ -12,12 +14,22 @@ set DDKBUILD_CMD=ddkbuild.cmd
 set TESTSOURCES=.\testsrc\*
 
 rd /s /q "%TEMPDIRBASE%" > NUL 2>&1
-:: Calls the tests for each base directory variable
-for %%i in (WXPBASE XPBASE WNETBASE WLHBASE W7BASE WIN7BASE) do @(
-  call :SET_TESTCASES %%i
+:: Unset all the tested variables in the "global" scope
+for %%i in (%DDK_BASEDIRS%) do @(
+  call :UNSETVAR %%i
 )
+    set
+:: Calls the tests for each base directory variable
+for %%i in (%DDK_BASEDIRS%) do @(
+  echo ================ %%i ================
+)
+::  call :SET_TESTCASES %%i
 :: We're done here, below are subroutines only
-goto :EOF
+endlocal & goto :EOF
+
+:: Unset given variable
+:UNSETVAR
+set %~1=&goto :EOF
 
 :: Sets the variables that control what to run
 :SET_TESTCASES
@@ -55,7 +67,7 @@ set TEST_TARGETS=%~2
 set TEST_DIRS=%~3
 for %%j in (%TEST_DIRS%) do @(
   for %%k in (%TEST_TARGETS%) do @(
-    echo %%k -^> %%j for each of: %DDK_CONFIGS%
+    echo %%k -^> %%j for each of^: %DDK_CONFIGS%
     for %%l in (%DDK_CONFIGS%) do @(
       call :RUN_ONE_TEST "%BASEDIRVAR%" "%DDK_DIRBASE%\%%j" "%%k" "%%l" "%%j"
     )
@@ -79,7 +91,7 @@ pushd "%TEMPDIR%" > NUL 2>&1
 set ERRORLEVEL=0
 call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > %~1_%~3_%~4.log 2>&1
 if not "%ERRORLEVEL%" == "0" @(
-  echo ERROR(%ERRORLEVEL%): %~1=%~2 for %~3 %~4 in %TEMPDIR%
+  echo ERROR^(%ERRORLEVEL%^)^: %~1=%~2 for %~3 %~4 in %TEMPDIR%
 )
 popd > NUL 2>&1
 endlocal & goto :EOF

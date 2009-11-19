@@ -71,13 +71,11 @@ xcopy /y "%TESTSOURCES%" "%TEMPDIR%\" > NUL 2>&1
 :: Switch to the folder, call local DDKBUILD copy, switch back
 pushd "%TEMPDIR%" > NUL 2>&1
 set ERRORLEVEL=0
-call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS%
-echo ERRORLEVEL=%ERRORLEVEL%
-:: > NUL 2>&1
+call .\%DDKBUILD_CMD% -%~3 %~4 . %ADDITIONAL_PARAMS% > "%TEMPDIRBASE%\%~1_%~3_%~4.log" 2>&1
 if "%ERRORLEVEL%" == "0" @(
-  echo SUCCESS: %~1=%~2 for %~3
+  echo SUCCESS: %~1=%~2 for %~3 %~4
 ) else @(
-  echo ERROR: %~1=%~2 for %~3 in %TEMPDIR%
+  echo ERROR: %~1=%~2 for %~3 %~4 in %TEMPDIR%
 )
 popd > NUL 2>&1
 endlocal & goto :EOF

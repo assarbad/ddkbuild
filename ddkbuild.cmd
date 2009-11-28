@@ -668,7 +668,8 @@ call %OSR_CMDLINE%
 if not "%ERRORLEVEL%" == "0" call :ShowErrorMsg 9 "%ERR_SetEnvFailed%" & goto :USAGE
 popd
 :: Check whether BUILD can be executed ...
-build /? > NUL 2>&1 || ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
+build /? > NUL 2>&1
+if %ERRORLEVEL% neq 0 ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
 
 :: ----------------------------------------------------------------------------
 :: Setting global variables for the scope of this CMD session
@@ -775,7 +776,8 @@ goto :ContinueParsing
 
 :DONE
 :: Check whether PREfast can be executed (also pop one directory) ...
-if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1 || ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
+if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1
+if %ERRORLEVEL% neq 0 ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
 :: Remove old warnings and logs ...
 for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do @(
   if exist "%%x"   del /f /q "%%x"

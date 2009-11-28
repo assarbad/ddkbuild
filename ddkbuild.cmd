@@ -183,16 +183,18 @@ if /i "%OSR_DEBUG%" == "on" (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRA
 :: Turn on echoing of current line if %OSR_DEBUG% is set to "on"
 @echo %OSR_DEBUG%
 
-:: Output version string
-@echo %OSR_VERSTR%
-%OSR_TRACE% ^(Current module: ^"%~f0^"^)
-@echo.
-
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set the target platform variable
 set OSR_TARGET=%~1
-:: Remove any dashes in the variable
+:: If the user wants to suppress the header part ...
+if /i "%OSR_TARGET%" == "/nologo" (shift & set OSR_NOLOGO=1)
+set OSR_TARGET=%~1
+:: Remove any dashes in the target
 if not "%OSR_TARGET%" == "" set OSR_TARGET=%OSR_TARGET:-=%
+:: Output version string
+@if not DEFINED OSR_NOLOGO echo %OSR_VERSTR%
+%OSR_TRACE% ^(Current module: ^"%~f0^"^)
+@if not DEFINED OSR_NOLOGO echo.
 :: Show help if the target parameter is empty after removal of the dashes
 if "%OSR_TARGET%" == "" goto :USAGE
 

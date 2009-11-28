@@ -151,7 +151,6 @@ set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
 set OSR_ECHO=@echo DDKBLD:
-set OSR_SCRIPTS_SILENT=1
 set OSR_RANDEXT=%RANDOM%%RANDOM%
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -184,10 +183,12 @@ if /i "%OSR_DEBUG%" == "on" (set OSR_TRACE=%OSR_ECHO% [TRACE]) else (set OSR_TRA
 @echo %OSR_DEBUG%
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: If the user wants to suppress the header part ... or the info about hook scripts
+if /i "%~1" == "/nologo" (shift & set OSR_NOLOGO=1)
+if /i "%~1" == "/notquiet" (shift & set OSR_NOTQUIET=1)
+:: The next line is *not* a mistake or bug ... it ensures that the order does not matter
+if /i "%~1" == "/nologo" (shift & set OSR_NOLOGO=1)
 :: Set the target platform variable
-set OSR_TARGET=%~1
-:: If the user wants to suppress the header part ...
-if /i "%OSR_TARGET%" == "/nologo" (shift & set OSR_NOLOGO=1)
 set OSR_TARGET=%~1
 :: Remove any dashes in the target
 if not "%OSR_TARGET%" == "" set OSR_TARGET=%OSR_TARGET:-=%
@@ -202,7 +203,7 @@ if "%OSR_TARGET%" == "" goto :USAGE
 :: In the build directory check for this script and call it if it exists.
 :: This allows to override any global system variable setting, if desired.
 if not "%3" == "" call :GetCustomEnvironment "%~f3"
-if not "%OSR_ERRCODE%" == "0" goto :USAGE
+if %OSR_ERRCODE% neq 0 goto :USAGE
 :: Additional error handling for better usability
 :: These subroutines will also attempt to locate the requested DDK!!!
 set OSR_ERRCODE=3
@@ -214,7 +215,7 @@ call :%OSR_TARGET%Check > NUL 2>&1
 :: If the BASEDIROS/BASEDIRVAR variable is not defined, it means the subroutine did not exist!
 if not DEFINED BASEDIROS call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIROS)" & goto :USAGE
 if not DEFINED BASEDIRVAR call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIRVAR)" & goto :USAGE
-if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
+if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set BASEDIR=%%%BASEDIRVAR%%%
@@ -646,12 +647,12 @@ goto :EOF
 :: Remove first command line arg
 shift
 call :SetMode %1
-if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
+if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
 set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
 
 call :CheckTargets %2
-if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
-if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
+if %OSR_ERRCODE% equ 6 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
+if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
 
 :: Resolve any variables in the command line string
 call :ResolveVar OSR_CMDLINE
@@ -689,7 +690,7 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
 
 :: Set additional variables at this point or do whatever you please
 @if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -697,8 +698,9 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
   )
   if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
+if %OSR_ERRCODE% neq 0 (echo %OSR_PREBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^))
 :: Save the current directory (before changing into the build directory!)
 :: AFTERPREBUILD
 pushd .
@@ -783,13 +785,13 @@ goto :BuildComplete
 setlocal ENABLEEXTENSIONS & pushd .
 set PREFASTLOG=PREfast_defects_%OSR_EXT%.xml
 prefast /log=%PREFASTLOG% /reset build %mpFlag% %bFlags% > NUL 2>&1
-if "%errorlevel%" GTR "0" set OSR_ERRCODE=%errorlevel%
+if %ERRORLEVEL% neq 0 set OSR_ERRCODE=%ERRORLEVEL%
 prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
 %OSR_ECHO% The PREfast logfile is ^"%prefastlog%^"!
 popd & endlocal
 
 :BuildComplete
-if not "%errorlevel%" == "0" set OSR_ERRCODE=%errorlevel%
+if %ERRORLEVEL% neq 0 set OSR_ERRCODE=%ERRORLEVEL%
 
 @echo %OSR_DEBUG%
 :: Assume that the onscreen errors are complete!
@@ -842,7 +844,7 @@ bscmake%bscFlags% @%sbrlist%
 :: Search upwards for "AFTERPREBUILD" to find the corresponding PUSHD
 popd
 @if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -850,8 +852,9 @@ popd
   )
   if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
+if %OSR_ERRCODE% neq 0 (echo %OSR_POSTBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^))
 goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: \ MAIN function of the script
@@ -865,18 +868,18 @@ goto :END
 :GetCustomEnvironment
 pushd .
 call :CheckTargets "%~f1"
-@if not "%OSR_ERRCODE%" == "0" @(
+@if %OSR_ERRCODE% neq 0 @(
   echo.
   %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
   %OSR_ECHO% when trying to set a custom environment! Quitting. ^(ERROR #%OSR_ERRCODE%^)
   set buildDirectory=%~f1
-  if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
+  if %OSR_ERRCODE% equ 6 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
   call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret
   goto :GetCustomEnvironment_ret
 )
 :: If the user provided a script to customize the environment, execute it.
 @if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
   pushd "%~f1"
   call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -884,7 +887,7 @@ call :CheckTargets "%~f1"
   )
   if exist "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+  if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )
 :GetCustomEnvironment_ret
 popd

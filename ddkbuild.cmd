@@ -119,13 +119,6 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::
 ::      This procedure has been cleaned up to be modular and easy to understand.
 ::
-::      As of the Server 2003 SP1 DDK DDKBUILD now clears the NO_BROWSE_FILE and
-::      NO_BINPLACE environment variables so that users can use these features.
-::
-::      Starting with the Vista WDK, the output in the respective tool window
-::      in VS is in Unicode by default. This garbles the output from DDKBUILD
-::      and we therefore clear the environment variable VS_UNICODE_OUTPUT.
-::
 ::      To modify the default behavior of this script with the newest WDKs,
 ::      set the variable SETTING_OACR in the ddkbldenv.cmd hook script to turn
 ::      OACR back on (NB: no OACR tools exist for Itanium in the WDK).
@@ -158,6 +151,7 @@ set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
 set OSR_ECHO=@echo DDKBLD:
+set OSR_SCRIPTS_SILENT=1
 set OSR_RANDEXT=%RANDOM%%RANDOM%
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -693,7 +687,7 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
 
 :: Set additional variables at this point or do whatever you please
 @if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
-  %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -701,7 +695,7 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
   )
   if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
 :: Save the current directory (before changing into the build directory!)
 :: AFTERPREBUILD
@@ -846,7 +840,7 @@ bscmake%bscFlags% @%sbrlist%
 :: Search upwards for "AFTERPREBUILD" to find the corresponding PUSHD
 popd
 @if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
-  %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -854,7 +848,7 @@ popd
   )
   if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
 goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -880,7 +874,7 @@ call :CheckTargets "%~f1"
 )
 :: If the user provided a script to customize the environment, execute it.
 @if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
-  %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
   pushd "%~f1"
   call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
   for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
@@ -888,7 +882,7 @@ call :CheckTargets "%~f1"
   )
   if exist "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
   popd
-  %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
+  if not "%OSR_SCRIPTS_SILENT%" == "1" %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )
 :GetCustomEnvironment_ret
 popd

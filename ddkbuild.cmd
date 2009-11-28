@@ -92,6 +92,7 @@ findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && g
 ::      007 == Target directory must have a SOURCES+MAKEFILE or DIRS file.
 ::      008 == The <directory> parameter must be a valid directory.
 ::      009 == The SETENV script failed.
+::      254 == BUILD or PREfast not found or not executable.
 ::
 ::      Note: If %OSR_ERRCODE% and %ERRORLEVEL% are equal, the return code stems
 ::            from one of the tools being called during the build process.
@@ -202,7 +203,9 @@ if "%OSR_TARGET%" == "" goto :USAGE
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: In the build directory check for this script and call it if it exists.
 :: This allows to override any global system variable setting, if desired.
+:: It also checks whether a DIRS/SOURCES file exists ...
 if not "%3" == "" call :GetCustomEnvironment "%~f3"
+if DEFINED HOOK_ABORT goto :END
 if %OSR_ERRCODE% neq 0 goto :USAGE
 :: Additional error handling for better usability
 :: These subroutines will also attempt to locate the requested DDK!!!
@@ -664,6 +667,8 @@ call %OSR_CMDLINE%
 :: Will only work with newer SETENV.BAT versions, but will be helpful in this case.
 if not "%ERRORLEVEL%" == "0" call :ShowErrorMsg 9 "%ERR_SetEnvFailed%" & goto :USAGE
 popd
+:: Check whether BUILD can be executed ...
+build /? > NUL 2>&1 || ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
 
 :: ----------------------------------------------------------------------------
 :: Setting global variables for the scope of this CMD session
@@ -700,7 +705,7 @@ if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
-if %OSR_ERRCODE% neq 0 (echo %OSR_PREBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^))
+if %OSR_ERRCODE% neq 0 (echo %OSR_PREBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
 :: Save the current directory (before changing into the build directory!)
 :: AFTERPREBUILD
 pushd .
@@ -769,6 +774,9 @@ goto :ContinueParsing
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :DONE
+:: Check whether PREfast can be executed (also pop one directory) ...
+if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1 || ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
+:: Remove old warnings and logs ...
 for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do @(
   if exist "%%x"   del /f /q "%%x"
 )
@@ -854,7 +862,7 @@ popd
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
-if %OSR_ERRCODE% neq 0 (echo %OSR_POSTBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^))
+if %OSR_ERRCODE% neq 0 (echo %OSR_POSTBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
 goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: \ MAIN function of the script
@@ -889,6 +897,7 @@ call :CheckTargets "%~f1"
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )
+if %OSR_ERRCODE% neq 0 (echo %OSR_SETENV_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & set HOOK_ABORT=1)
 :GetCustomEnvironment_ret
 popd
 goto :EOF

@@ -783,7 +783,7 @@ for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR
   if exist "%%x"   del /f /q "%%x"
 )
 
-if not "%PREFAST_BUILD%" == "0" goto :RunPrefastBuild
+if %PREFAST_BUILD% neq 0 goto :RunPrefastBuild
 %OSR_ECHO% Run build %mpFlag% %bFlags% for %BuildMode% version in %buildDirectory_raw%
 pushd .
 build %mpFlag% %bFlags%

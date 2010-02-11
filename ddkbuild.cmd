@@ -1,6 +1,6 @@
 @echo off
 @set VERSION=V7.4
-@set OSR_DEBUG=on
+@set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
 goto :EOF
@@ -208,7 +208,7 @@ if "%OSR_TARGET%" == "" goto :USAGE
 :: It also checks whether a DIRS/SOURCES file exists ...
 if not "%3" == "" call :GetCustomEnvironment "%~f3"
 if DEFINED HOOK_ABORT goto :END
-if %OSR_ERRCODE% neq 0 goto :USAGE
+if not "%OSR_ERRCODE%" == "0" goto :USAGE
 :: Additional error handling for better usability
 :: These subroutines will also attempt to locate the requested DDK!!!
 set OSR_ERRCODE=3
@@ -220,7 +220,7 @@ call :%OSR_TARGET%Check > NUL 2>&1
 :: If the BASEDIROS/BASEDIRVAR variable is not defined, it means the subroutine did not exist!
 if not DEFINED BASEDIROS call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIROS)" & goto :USAGE
 if not DEFINED BASEDIRVAR call :ShowErrorMsg 1 "%ERR_UnknownBuildType% (BASEDIRVAR)" & goto :USAGE
-if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & goto :USAGE
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set BASEDIR=%%%BASEDIRVAR%%%
@@ -652,12 +652,12 @@ goto :EOF
 :: Remove first command line arg
 shift
 call :SetMode %1
-if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BadMode%" & goto :USAGE
 set OSR_BUILDNAME=%OSR_TARGET% (%BuildMode%) using the %BASEDIROS% DDK and %%%BASEDIRVAR%%%
 
 call :CheckTargets %2
-if %OSR_ERRCODE% equ 6 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
-if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
+if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :USAGE
+if not "%OSR_ERRCODE%" == "0" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :USAGE
 
 :: Resolve any variables in the command line string
 call :ResolveVar OSR_CMDLINE
@@ -708,7 +708,7 @@ if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" (
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
 )
-if %OSR_ERRCODE% neq 0 (echo %OSR_PREBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
+if not "%OSR_ERRCODE%" == "0" (echo %OSR_PREBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
 :: Save the current directory (before changing into the build directory!)
 :: AFTERPREBUILD
 pushd .
@@ -778,14 +778,14 @@ goto :ContinueParsing
 
 :DONE
 :: Check whether PREfast can be executed (also pop one directory) ...
-if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1
-if %ERRORLEVEL% neq 0 ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
+if not "%PREFAST_BUILD%" == "0" prefast /? > NUL 2>&1
+if ERRORLEVEL 1 ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
 :: Remove old warnings and logs ...
 for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do (
   if exist "%%x"   del /f /q "%%x"
 )
 
-if %PREFAST_BUILD% neq 0 goto :RunPrefastBuild
+if not "%PREFAST_BUILD%" == "0" goto :RunPrefastBuild
 %OSR_ECHO% Run build %mpFlag% %bFlags% for %BuildMode% version in %buildDirectory_raw%
 pushd .
 build %mpFlag% %bFlags%
@@ -797,13 +797,13 @@ goto :BuildComplete
 setlocal ENABLEEXTENSIONS & pushd .
 set PREFASTLOG=PREfast_defects_%OSR_EXT%.xml
 prefast /log=%PREFASTLOG% /reset build %mpFlag% %bFlags% > NUL 2>&1
-if %ERRORLEVEL% neq 0 set OSR_ERRCODE=%ERRORLEVEL%
+if ERRORLEVEL 1 set OSR_ERRCODE=%ERRORLEVEL%
 prefast /log=%PREFASTLOG% list > prefast%OSR_EXT%.log
 %OSR_ECHO% The PREfast logfile is ^"%prefastlog%^"!
 popd & endlocal
 
 :BuildComplete
-if %ERRORLEVEL% neq 0 set OSR_ERRCODE=%ERRORLEVEL%
+if ERRORLEVEL 1 set OSR_ERRCODE=%ERRORLEVEL%
 
 echo %OSR_DEBUG%
 :: Assume that the onscreen errors are complete!
@@ -866,7 +866,7 @@ if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" (
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
 )
-if %OSR_ERRCODE% neq 0 (echo %OSR_POSTBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
+if not "%OSR_ERRCODE%" == "0" (echo %OSR_POSTBUILD_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & goto :END)
 goto :END
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: \ MAIN function of the script
@@ -880,12 +880,12 @@ goto :END
 :GetCustomEnvironment
 pushd .
 call :CheckTargets "%~f1"
-if %OSR_ERRCODE% neq 0 (
+if not "%OSR_ERRCODE%" == "0" (
   echo.
   %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
   %OSR_ECHO% when trying to set a custom environment! Quitting. ^(ERROR #%OSR_ERRCODE%^)
   set buildDirectory=%~f1
-  if %OSR_ERRCODE% equ 6 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
+  if "%OSR_ERRCODE%" == "6" call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoTarget%" & goto :GetCustomEnvironment_ret
   call :ShowErrorMsg %OSR_ERRCODE% "%ERR_NoDir%" & goto :GetCustomEnvironment_ret
   goto :GetCustomEnvironment_ret
 )
@@ -901,7 +901,7 @@ if exist "%~f1\%OSR_SETENV_SCRIPT%" (
   popd
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^<^< Finished setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
 )
-if %OSR_ERRCODE% neq 0 (echo %OSR_SETENV_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & set HOOK_ABORT=1)
+if not "%OSR_ERRCODE%" == "0" (echo %OSR_SETENV_SCRIPT% requested abort ^(%OSR_ERRCODE%^) & set HOOK_ABORT=1)
 :GetCustomEnvironment_ret
 popd
 goto :EOF
@@ -1011,9 +1011,9 @@ goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: / ErrorWithUsage subroutine
+:: / ShowErrorMsg subroutine
 ::   This one will take the passed in parameters and build a nice error
-::   message which is returned to the user along with the usage hints.
+::   message which is returned to the user.
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ShowErrorMsg
 set OSR_ERRCODE=%~1
@@ -1025,7 +1025,7 @@ echo.
 if DEFINED buildDirectory %OSR_ECHO% -^> Target directory: %buildDirectory%
 goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: \ ErrorWithUsage subroutine
+:: \ ShowErrorMsg subroutine
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

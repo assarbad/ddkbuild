@@ -1,6 +1,6 @@
 @echo off
 @set VERSION=V7.4
-@set OSR_DEBUG=off
+@set OSR_DEBUG=on
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
 goto :EOF
@@ -153,6 +153,7 @@ set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
 set OSR_ECHO=@echo DDKBLD:
 set OSR_RANDEXT=%RANDOM%%RANDOM%
+set OSR_SCRIPT=%~n0
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set error messages
@@ -189,14 +190,15 @@ if /i "%~1" == "/nologo" (shift & set OSR_NOLOGO=1)
 if /i "%~1" == "/notquiet" (shift & set OSR_NOTQUIET=1)
 :: The next line is *not* a mistake or bug ... it ensures that the order does not matter
 if /i "%~1" == "/nologo" (shift & set OSR_NOLOGO=1)
+%OSR_TRACE% 1st argument now: %1
 :: Set the target platform variable
 set OSR_TARGET=%~1
 :: Remove any dashes in the target
 if not "%OSR_TARGET%" == "" set OSR_TARGET=%OSR_TARGET:-=%
 :: Output version string
-@if not DEFINED OSR_NOLOGO echo %OSR_VERSTR%
+if not DEFINED OSR_NOLOGO echo %OSR_VERSTR%
 %OSR_TRACE% ^(Current module: ^"%~f0^"^)
-@if not DEFINED OSR_NOLOGO echo.
+if not DEFINED OSR_NOLOGO echo.
 :: Show help if the target parameter is empty after removal of the dashes
 if "%OSR_TARGET%" == "" goto :USAGE
 
@@ -669,7 +671,7 @@ if not "%ERRORLEVEL%" == "0" call :ShowErrorMsg 9 "%ERR_SetEnvFailed%" & goto :U
 popd
 :: Check whether BUILD can be executed ...
 build /? > NUL 2>&1
-if %ERRORLEVEL% neq 0 ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
+if ERRORLEVEL 1 ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
 
 :: ----------------------------------------------------------------------------
 :: Setting global variables for the scope of this CMD session
@@ -695,11 +697,11 @@ if "%NUMBER_OF_PROCESSORS%" == "" set mpFlag=
 if "%NUMBER_OF_PROCESSORS%" == "1" set mpFlag=
 
 :: Set additional variables at this point or do whatever you please
-@if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" @(
+if exist "%buildDirectory%\%OSR_PREBUILD_SCRIPT%" (
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Performing pre-build steps [%OSR_PREBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_PREBUILD_SCRIPT%" > "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do (
     %OSR_ECHO% %%x
   )
   if exist "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_PREBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
@@ -779,7 +781,7 @@ goto :ContinueParsing
 if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1
 if %ERRORLEVEL% neq 0 ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
 :: Remove old warnings and logs ...
-for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do @(
+for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do (
   if exist "%%x"   del /f /q "%%x"
 )
 
@@ -803,29 +805,29 @@ popd & endlocal
 :BuildComplete
 if %ERRORLEVEL% neq 0 set OSR_ERRCODE=%ERRORLEVEL%
 
-@echo %OSR_DEBUG%
+echo %OSR_DEBUG%
 :: Assume that the onscreen errors are complete!
 setlocal
 set WARNING_FILE_COUNT=0
-if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
+if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do (
   set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+1
 )
 if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% ================ Build warnings =======================
-  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do @(
-    @echo %%x
+  if exist "build%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]* error[^.][CDMRU][0-9][0-9]* error[^.][BRP][KCWG][0-9][0-9]* error[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "build%OSR_EXT%.log"') do (
+    echo %%x
   )
 )
 set WARNING_FILE_COUNT_PRE=0
-if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do @(
+if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do (
   set /a WARNING_FILE_COUNT_PRE=%WARNING_FILE_COUNT_PRE%+1
 )
 :: Reset if this is no PREfast build
 if "%PREFAST_BUILD%" == "0" set WARNING_FILE_COUNT_PRE=0
 if not "%WARNING_FILE_COUNT_PRE%" == "0" (
   %OSR_ECHO% =============== PREfast warnings ======================
-  if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do @(
-    @echo %%x
+  if exist "prefast%OSR_EXT%.log" for /f "tokens=*" %%x in ('findstr "warning[^.][CDMRU][0-9][0-9]* warning[^.][BRP][KCWG][0-9][0-9]* warning[^.][ACLPS][DNRTVX][JKLTX][0-9][0-9]*" "prefast%OSR_EXT%.log"') do (
+    echo %%x
   )
 )
 set /a WARNING_FILE_COUNT=%WARNING_FILE_COUNT%+%WARNING_FILE_COUNT_PRE%
@@ -833,7 +835,7 @@ if not "%WARNING_FILE_COUNT%" == "0" (
   %OSR_ECHO% =======================================================
 )
 endlocal
-@echo.
+echo.
 %OSR_ECHO% Build complete
 %OSR_ECHO% Building browse information files
 if exist "buildbrowse.cmd" call "buildbrowse.cmd" & goto :postBuildSteps
@@ -853,11 +855,11 @@ bscmake%bscFlags% @%sbrlist%
 :: Restore the current directory (after changing into the build directory!)
 :: Search upwards for "AFTERPREBUILD" to find the corresponding PUSHD
 popd
-@if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" @(
+if exist "%buildDirectory%\%OSR_POSTBUILD_SCRIPT%" (
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Performing post-build steps [%OSR_POSTBUILD_SCRIPT%] ...
   pushd "%buildDirectory%"
   call "%OSR_POSTBUILD_SCRIPT%" > "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"') do (
     %OSR_ECHO% %%x
   )
   if exist "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_POSTBUILD_SCRIPT%_%OSR_RANDEXT%.tmp"
@@ -878,7 +880,7 @@ goto :END
 :GetCustomEnvironment
 pushd .
 call :CheckTargets "%~f1"
-@if %OSR_ERRCODE% neq 0 @(
+if %OSR_ERRCODE% neq 0 (
   echo.
   %OSR_ECHO% The target directory seemed to not contain a DIRS or SOURCES file
   %OSR_ECHO% when trying to set a custom environment! Quitting. ^(ERROR #%OSR_ERRCODE%^)
@@ -888,11 +890,11 @@ call :CheckTargets "%~f1"
   goto :GetCustomEnvironment_ret
 )
 :: If the user provided a script to customize the environment, execute it.
-@if exist "%~f1\%OSR_SETENV_SCRIPT%" @(
+if exist "%~f1\%OSR_SETENV_SCRIPT%" (
   if DEFINED OSR_NOTQUIET %OSR_ECHO% ^>^> Setting custom environment variables [%OSR_SETENV_SCRIPT%] ...
   pushd "%~f1"
   call "%OSR_SETENV_SCRIPT%" > "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
-  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"') do @(
+  for /f "tokens=*" %%x in ('type "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"') do (
     %OSR_ECHO% %%x
   )
   if exist "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp" del /f /q "%TEMP%\%OSR_SETENV_SCRIPT%_%OSR_RANDEXT%.tmp"
@@ -1014,11 +1016,11 @@ goto :EOF
 ::   message which is returned to the user along with the usage hints.
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ShowErrorMsg
-@set OSR_ERRCODE=%~1
-@set OSR_ERRMSG=%~2
-@set OSR_ERRMSG=%OSR_ERRMSG:'="%
-@set OSR_ERRMSG=ERROR #%OSR_ERRCODE%: %OSR_ERRMSG%
-@echo.
+set OSR_ERRCODE=%~1
+set OSR_ERRMSG=%~2
+set OSR_ERRMSG=%OSR_ERRMSG:'="%
+set OSR_ERRMSG=ERROR #%OSR_ERRCODE%: %OSR_ERRMSG%
+echo.
 %OSR_ECHO% %OSR_ERRMSG%
 if DEFINED buildDirectory %OSR_ECHO% -^> Target directory: %buildDirectory%
 goto :EOF
@@ -1068,14 +1070,14 @@ setlocal ENABLEEXTENSIONS
 call :CommonCheckMsg1
 :: Try to find an installed DDK/WDK from the registry keys
 if DEFINED OSR_REGAVAILABLE if not "%OSR_REGAVAILABLE%" == "0" (
-  for %%i in (%~1) do @(
+  for %%i in (%~1) do (
     call :RegTryBaseDirTemp "%%i"
   )
 )
 :: Try all the "default" locations
 if not DEFINED BASEDIRTEMP (
-  for %%i in (%~1) do @(
-    for %%a in (WINDDK DDK) do @(
+  for %%i in (%~1) do (
+    for %%a in (WINDDK DDK) do (
       call :BruteTryBaseDirTemp "%SystemDrive%\%%a\%%i"
       call :BruteTryBaseDirTemp "%ProgramFiles%\%%a\%%i"
     )
@@ -1119,7 +1121,7 @@ set VARIABLETOSET=%~3
 set REGMAINKEY=HKLM\SOFTWARE\Microsoft\WINDDK
 :: Test whether we can read the value below this key
 reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%" > NUL 2>&1 || goto :RegTryBaseDirTempSingle_WOW64
-for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do @(
+for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do (
   call :SetVar _SETVARIABLE "%%j"
 )
 endlocal & set %VARIABLETOSET%=%_SETVARIABLE%
@@ -1127,7 +1129,7 @@ endlocal & set %VARIABLETOSET%=%_SETVARIABLE%
 set REGMAINKEY=HKLM\SOFTWARE\Wow6432Node\Microsoft\WINDDK
 :: Test whether we can read the value below this key
 reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%" > NUL 2>&1 || goto :RegTryBaseDirTempSingle_EOF
-for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do @(
+for /f "tokens=2*" %%i in ('reg query "%REGMAINKEY%\%REGSUBKEY%" /v "%REGVALUE%"^|findstr /C:"%REGVALUE%"') do (
   call :SetVar _SETVARIABLE "%%j"
 )
 endlocal & set %VARIABLETOSET%=%_SETVARIABLE%
@@ -1162,7 +1164,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 @echo USAGE:
 @echo ======
-@echo   %~n0 ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST] [-CUV]
+@echo   %OSR_SCRIPT% ^<target^> ^<build type^> ^<directory^> [flags] [-WDF] [-PREFAST] [-CUV]
 @echo.
 @echo Values for ^<target^>:
 @echo    ---------------------------------------------------------------------------
@@ -1237,13 +1239,13 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       (All scripts execute inside their current directory. Consider this!)
 @echo.
 @echo Examples:
-@echo       ^"%~n0 -NT4 checked .^" (for NT4 BUILD)
-@echo       ^"%~n0 -WXP64 chk .^"
-@echo       ^"%~n0 -WXP chk c:\projects\myproject^"
-@echo       ^"%~n0 -WNET64 chk .^"      (IA64 build)
-@echo       ^"%~n0 -WNETAMD64 chk .^"   (AMD64/EM64T build)
-@echo       ^"%~n0 -WNETXP chk . -cZ -WDF^"
-@echo       ^"%~n0 -WNETXP chk . -cZ -PREFAST^"
+@echo       ^"%OSR_SCRIPT% -NT4 checked .^" (for NT4 BUILD)
+@echo       ^"%OSR_SCRIPT% -WXP64 chk .^"
+@echo       ^"%OSR_SCRIPT% -WXP chk c:\projects\myproject^"
+@echo       ^"%OSR_SCRIPT% -WNET64 chk .^"      (IA64 build)
+@echo       ^"%OSR_SCRIPT% -WNETAMD64 chk .^"   (AMD64/EM64T build)
+@echo       ^"%OSR_SCRIPT% -WNETXP chk . -cZ -WDF^"
+@echo       ^"%OSR_SCRIPT% -WNETXP chk . -cZ -PREFAST^"
 @echo.
 @echo       In order for this procedure to work correctly for each platform, it
 @echo       requires an environment variable to be set up for certain platforms.
@@ -1272,4 +1274,5 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo.
 
 :END
+%OSR_TRACE% Error code is %OSR_ERRCODE%
 popd & endlocal & exit /b %OSR_ERRCODE%

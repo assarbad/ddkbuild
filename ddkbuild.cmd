@@ -671,7 +671,7 @@ call %OSR_CMDLINE%
 if ERRORLEVEL 1 call :ShowErrorMsg 9 "%ERR_SetEnvFailed%" & goto :USAGE
 popd
 :: Check whether BUILD can be executed ...
-build /? > NUL 2>&1
+build /? 2>&1 | findstr /b "BUILD:" > NUL 2>&1
 if ERRORLEVEL 1 ( call :ShowErrorMsg 254 "BUILD not found or not executable!" & goto :END )
 
 :: ----------------------------------------------------------------------------
@@ -779,7 +779,7 @@ goto :ContinueParsing
 
 :DONE
 :: Check whether PREfast can be executed (also pop one directory) ...
-if %PREFAST_BUILD% neq 0 prefast /? > NUL 2>&1
+if %PREFAST_BUILD% neq 0 prefast /? 2>&1 | findstr /c:"PREFAST /?" > NUL 2>&1
 if ERRORLEVEL 1 ( popd & call :ShowErrorMsg 254 "PREfast not found or not executable!" & goto :END )
 :: Remove old warnings and logs ...
 for %%x in (build%OSR_EXT%.err build%OSR_EXT%.wrn build%OSR_EXT%.log prefast%OSR_EXT%.log) do (

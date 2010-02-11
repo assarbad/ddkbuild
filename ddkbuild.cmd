@@ -154,6 +154,7 @@ set OSR_SETENV_SCRIPT=ddkbldenv.cmd
 set OSR_ECHO=@echo DDKBLD:
 set OSR_RANDEXT=%RANDOM%%RANDOM%
 set OSR_SCRIPT=%~n0
+set OSR_SCRPTH=%~f0
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Set error messages
@@ -1267,7 +1268,7 @@ endlocal & set BASEDIRTEMP=%BASEDIRTEMP% & goto :EOF
 @echo       Vista WDK (in later DDKs there is no need to set WDF_ROOT).
 @echo.
 @echo Path to this script:
-@echo      %~f0
+@echo      %OSR_SCRPTH%
 @echo.
 @echo   %OSR_VERSTR%
 @echo   -^> report any problems to ^<info@osr.com^> or ^<http://assarbad.net/contact/^>

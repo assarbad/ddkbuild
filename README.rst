@@ -1,6 +1,6 @@
-==================
- ``ddkbuild.cmd``
-==================
+==========
+ ddkbuild
+==========
 
 * Download the `latest release 7.4r60`_ (`PGP signature`_).
 * The companion project `DDKWizard can be found here`_.
@@ -23,8 +23,8 @@ I have PGP-signed all historical releases in April 2016, after verifying their
 integrity, and they are available from the `download section`_. Use GPG_ to
 verify the downloads against my signatures.
 
-Techniques used in ``ddkbuild``
--------------------------------
+Techniques used in ddkbuild
+---------------------------
 Perhaps ``ddkbuild.cmd`` is one of the biggest scripts ever written for the NT
 script interpreter.
 

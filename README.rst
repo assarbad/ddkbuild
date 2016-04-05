@@ -2,7 +2,8 @@
  ``ddkbuild.cmd``
 ==================
 
-Download the `latest release 7.4r60`_ (`PGP signature`_).
+* Download the `latest release 7.4r60`_ (`PGP signature`_).
+* The companion project `DDKWizard can be found here`_.
 
 About
 -----
@@ -107,6 +108,7 @@ normalization of parameters or processing of file names.
 
 .. _latest release 7.4r60: https://bitbucket.org/assarbad/ddkbuild/downloads/ddkbuild_v74r60.zip
 .. _PGP signature: https://bitbucket.org/assarbad/ddkbuild/downloads/ddkbuild_v74r60.zip.asc
+.. _DDKWizard can be found here: https://bitbucket.org/assarbad/ddkwizard
 .. _ddkbuild.bat: http://www.osronline.com/article.cfm?article=43
 .. _OSR: http://osronline.com
 .. _download section: https://bitbucket.org/assarbad/ddkwizard/downloads

@@ -106,12 +106,12 @@ syntax described under ``FOR /?``, such as ``%~1`` in order to remove the outer
 double quotes from the parameter. This is a pretty neat feature for
 normalization of parameters or processing of file names.
 
-.. _latest release 7.4r60: https://bitbucket.org/assarbad/ddkbuild/downloads/ddkbuild_v74r60.zip
-.. _PGP signature: https://bitbucket.org/assarbad/ddkbuild/downloads/ddkbuild_v74r60.zip.asc
-.. _DDKWizard can be found here: https://bitbucket.org/assarbad/ddkwizard
+.. _latest release 7.4r60: https://sourceforge.net/projects/ddkbuild/files/legacy-releases/ddkbuild_v74r60.zip/download
+.. _PGP signature: https://sourceforge.net/projects/ddkbuild/files/legacy-releases/ddkbuild_v74r60.zip.asc/download
+.. _DDKWizard can be found here: https://sourceforge.net/projects/ddkwizard/
 .. _ddkbuild.bat: http://www.osronline.com/article.cfm?article=43
 .. _OSR: http://osronline.com
-.. _download section: https://bitbucket.org/assarbad/ddkwizard/downloads
+.. _download section: https://sourceforge.net/projects/ddkwizard/files/
 .. _GPG: https://www.gpg4win.org/index.html
-.. _DDKWizard manual: https://bitbucket.org/assarbad/ddkwizard/downloads/DDKWizard_Help.pdf
-.. _this Stackoverflow question: http://stackoverflow.com/a/16632555
+.. _DDKWizard manual: https://sourceforge.net/projects/ddkwizard/files/legacy-releases/DDKWizard_Help.pdf/download
+.. _this Stackoverflow question: https://stackoverflow.com/a/16632555
